@@ -22,30 +22,30 @@ let
         sha512 = "xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==";
       };
     };
-    "playwright-core-1.36.0" = {
+    "playwright-core-1.36.2" = {
       name = "playwright-core";
       packageName = "playwright-core";
-      version = "1.36.0";
+      version = "1.36.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.36.0.tgz";
-        sha512 = "7RTr8P6YJPAqB+8j5ATGHqD6LvLLM39sYVNsslh78g8QeLcBs5750c6+msjrHUwwGt+kEbczBj1XB22WMwn+WA==";
+        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.36.2.tgz";
+        sha512 = "sQYZt31dwkqxOrP7xy2ggDfEzUxM1lodjhsQ3NMMv5uGTRDsLxU0e4xf4wwMkF2gplIxf17QMBCodSFgm6bFVQ==";
       };
     };
   };
 in
 {
-  "@playwright/test-1.36.0" = nodeEnv.buildNodePackage {
+  "@playwright/test-1.36.2" = nodeEnv.buildNodePackage {
     name = "_at_playwright_slash_test";
     packageName = "@playwright/test";
-    version = "1.36.0";
+    version = "1.36.2";
     src = fetchurl {
-      url = "https://registry.npmjs.org/@playwright/test/-/test-1.36.0.tgz";
-      sha512 = "yN+fvMYtiyLFDCQos+lWzoX4XW3DNuaxjBu68G0lkgLgC6BP+m/iTxJQoSicz/x2G5EsrqlZTqTIP9sTgLQerg==";
+      url = "https://registry.npmjs.org/@playwright/test/-/test-1.36.2.tgz";
+      sha512 = "2rVZeyPRjxfPH6J0oGJqE8YxiM1IBRyM8hyrXYK7eSiAqmbNhxwcLa7dZ7fy9Kj26V7FYia5fh9XJRq4Dqme+g==";
     };
     dependencies = [
       sources."@types/node-20.4.8"
       sources."fsevents-2.3.2"
-      sources."playwright-core-1.36.0"
+      sources."playwright-core-1.36.2"
     ];
     buildInputs = globalBuildInputs;
     meta = {
