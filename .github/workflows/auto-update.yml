@@ -1,0 +1,33 @@
+name: "Auto-update"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 0 * * *'
+jobs:
+  check-and-push-updates:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the
+      # added or changed files to the repository.
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: cachix/install-nix-action@v22
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+    - run: ./update.sh
+    - name: Set commit and tagging message
+      id: commit_message_step
+      run: |
+        echo 'commit_message<<EOF' >> $GITHUB_OUTPUT
+        echo "Update to version $(cat version.txt)" >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+        echo 'tagging_message<<EOF' >> $GITHUB_OUTPUT
+        cat version.txt >> $GITHUB_OUTPUT
+        echo 'EOF' >> $GITHUB_OUTPUT
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: ${{ steps.commit_message_step.outputs.commit_message }}
+        tagging_message: ${{ steps.commit_message_step.outputs.tagging_message }}
