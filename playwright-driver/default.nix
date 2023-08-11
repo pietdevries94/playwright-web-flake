@@ -30,15 +30,15 @@ let
     {
       pname = "playwright-driver";
       # run ./pkgs/development/python-modules/playwright/update.sh to update
-      version = "1.36.2";
+      version = "1.37.0";
 
       src = fetchurl {
         url = "https://playwright.azureedge.net/builds/driver/${filename}";
         sha256 = {
-          x86_64-linux = "0jap7adh5mla9ddc01chxczshgjg4wvd6rs5dhj1z7y5072cjhm9";
-          aarch64-linux = "067czpgjrrparqq5dz9zjfr7cgjzyib1j9l8hw2agqlkl2hp4rd7";
-          x86_64-darwin = "0p2x2jbw06wf7dxjm9kjc2vzav3dsk10bwrm794s6d9gd4arasjc";
-          aarch64-darwin = "1c8aj5d2mn3gfxgg2sc7fs7sy5m6wff4x46hjs7jijqksa80m6da";
+          x86_64-linux = "1lkmanr402ar9njwb7dgyzparjyr1r9krz9ad7b8c6hi3fjvrj0y";
+          aarch64-linux = "13nfva9jfmjyjxm1my0aq8ngn6ha0fdrpfv28gm351n0j9cjlvqh";
+          x86_64-darwin = "0q1qmgypngxs9ipb6dlhk1xccyzw6frzr835ijifpypgp4xmz2gi";
+          aarch64-darwin = "1mq1868s06wgfgi3nhdrzsdqi3cl08lrkiz5q06mg1s724b2sf0v";
         }.${system} or throwSystem;
       };
 
