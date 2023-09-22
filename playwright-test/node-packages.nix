@@ -13,39 +13,39 @@ let
         sha512 = "xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==";
       };
     };
-    "playwright-1.38.0" = {
+    "playwright-1.38.1" = {
       name = "playwright";
       packageName = "playwright";
-      version = "1.38.0";
+      version = "1.38.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/playwright/-/playwright-1.38.0.tgz";
-        sha512 = "fJGw+HO0YY+fU/F1N57DMO+TmXHTrmr905J05zwAQE9xkuwP/QLDk63rVhmyxh03dYnEhnRbsdbH9B0UVVRB3A==";
+        url = "https://registry.npmjs.org/playwright/-/playwright-1.38.1.tgz";
+        sha512 = "oRMSJmZrOu1FP5iu3UrCx8JEFRIMxLDM0c/3o4bpzU5Tz97BypefWf7TuTNPWeCe279TPal5RtPPZ+9lW/Qkow==";
       };
     };
-    "playwright-core-1.38.0" = {
+    "playwright-core-1.38.1" = {
       name = "playwright-core";
       packageName = "playwright-core";
-      version = "1.38.0";
+      version = "1.38.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.38.0.tgz";
-        sha512 = "f8z1y8J9zvmHoEhKgspmCvOExF2XdcxMW8jNRuX4vkQFrzV4MlZ55iwb5QeyiFQgOFCUolXiRHgpjSEnqvO48g==";
+        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.38.1.tgz";
+        sha512 = "tQqNFUKa3OfMf4b2jQ7aGLB8o9bS3bOY0yMEtldtC2+spf8QXG9zvXLTXUeRsoNuxEYMgLYR+NXfAa1rjKRcrg==";
       };
     };
   };
 in
 {
-  "@playwright/test-1.38.0" = nodeEnv.buildNodePackage {
+  "@playwright/test-1.38.1" = nodeEnv.buildNodePackage {
     name = "_at_playwright_slash_test";
     packageName = "@playwright/test";
-    version = "1.38.0";
+    version = "1.38.1";
     src = fetchurl {
-      url = "https://registry.npmjs.org/@playwright/test/-/test-1.38.0.tgz";
-      sha512 = "xis/RXXsLxwThKnlIXouxmIvvT3zvQj1JE39GsNieMUrMpb3/GySHDh2j8itCG22qKVD4MYLBp7xB73cUW/UUw==";
+      url = "https://registry.npmjs.org/@playwright/test/-/test-1.38.1.tgz";
+      sha512 = "NqRp8XMwj3AK+zKLbZShl0r/9wKgzqI/527bkptKXomtuo+dOjU9NdMASQ8DNC9z9zLOMbG53T4eihYr3XR+BQ==";
     };
     dependencies = [
       sources."fsevents-2.3.2"
-      sources."playwright-1.38.0"
-      sources."playwright-core-1.38.0"
+      sources."playwright-1.38.1"
+      sources."playwright-core-1.38.1"
     ];
     buildInputs = globalBuildInputs;
     meta = {
