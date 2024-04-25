@@ -48,21 +48,28 @@ let
 
       postPatch = ''
         # Use Nix's NodeJS instead of the bundled one.
-        substituteInPlace playwright.sh --replace '"$SCRIPT_PATH/node"' '"${nodejs}/bin/node"'
         rm node
 
-        # Hard-code the script path to $out directory to avoid a dependency on coreutils
-        substituteInPlace playwright.sh \
-          --replace 'SCRIPT_PATH="$(cd "$(dirname "$0")" ; pwd -P)"' "SCRIPT_PATH=$out"
-
-        patchShebangs playwright.sh package/bin/*.sh
+        patchShebangs package/bin/*.sh
       '';
 
       installPhase = ''
         runHook preInstall
 
         mkdir -p $out/bin
-        mv playwright.sh $out/bin/playwright
+        # playwright.sh doesn't exist anymore, so we write a new one
+        cat > $out/bin/playwright <<EOF
+#!/bin/sh
+if [ -z "\$PLAYWRIGHT_NODEJS_PATH" ]; then
+  PLAYWRIGHT_NODEJS_PATH="${nodejs}/bin/node"
+fi
+"\$PLAYWRIGHT_NODEJS_PATH" "$out/package/cli.js" "$@"
+EOF
+
+        chmod +x $out/bin/playwright
+
+        patchShebangs $out/bin/playwright
+
         mv package $out/
 
         runHook postInstall
