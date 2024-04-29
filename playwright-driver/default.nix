@@ -63,7 +63,7 @@ let
 if [ -z "\$PLAYWRIGHT_NODEJS_PATH" ]; then
   PLAYWRIGHT_NODEJS_PATH="${nodejs}/bin/node"
 fi
-"\$PLAYWRIGHT_NODEJS_PATH" "$out/package/cli.js" "$@"
+"\$PLAYWRIGHT_NODEJS_PATH" "$out/package/cli.js" "\$@"
 EOF
 
         chmod +x $out/bin/playwright
