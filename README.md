@@ -92,3 +92,7 @@ The [flake reference](https://nix.dev/manual/nix/2.24/command-ref/new-cli/nix3-f
 -nix develop github:pietdevries94/playwright-web-flake
 +nix develop github:pietdevries94/playwright-web-flake/1.37.1
 ```
+
+## Also see
+
+- https://primamateria.github.io/blog/playwright-nixos-webdev/
