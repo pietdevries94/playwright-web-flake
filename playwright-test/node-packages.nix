@@ -4,38 +4,38 @@
 
 let
   sources = {
-    "playwright-1.47.1" = {
+    "playwright-1.47.2" = {
       name = "playwright";
       packageName = "playwright";
-      version = "1.47.1";
+      version = "1.47.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/playwright/-/playwright-1.47.1.tgz";
-        sha512 = "SUEKi6947IqYbKxRiqnbUobVZY4bF1uu+ZnZNJX9DfU1tlf2UhWfvVjLf01pQx9URsOr18bFVUKXmanYWhbfkw==";
+        url = "https://registry.npmjs.org/playwright/-/playwright-1.47.2.tgz";
+        sha512 = "nx1cLMmQWqmA3UsnjaaokyoUpdVaaDhJhMoxX2qj3McpjnsqFHs516QAKYhqHAgOP+oCFTEOCOAaD1RgD/RQfA==";
       };
     };
-    "playwright-core-1.47.1" = {
+    "playwright-core-1.47.2" = {
       name = "playwright-core";
       packageName = "playwright-core";
-      version = "1.47.1";
+      version = "1.47.2";
       src = fetchurl {
-        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.47.1.tgz";
-        sha512 = "i1iyJdLftqtt51mEk6AhYFaAJCDx0xQ/O5NU8EKaWFgMjItPVma542Nh/Aq8aLCjIJSzjaiEQGW/nyqLkGF1OQ==";
+        url = "https://registry.npmjs.org/playwright-core/-/playwright-core-1.47.2.tgz";
+        sha512 = "3JvMfF+9LJfe16l7AbSmU555PaTl2tPyQsVInqm3id16pdDfvZ8TTZ/pyzmkbDrZTQefyzU7AIHlZqQnxpqHVQ==";
       };
     };
   };
 in
 {
-  "@playwright/test-1.47.1" = nodeEnv.buildNodePackage {
+  "@playwright/test-1.47.2" = nodeEnv.buildNodePackage {
     name = "_at_playwright_slash_test";
     packageName = "@playwright/test";
-    version = "1.47.1";
+    version = "1.47.2";
     src = fetchurl {
-      url = "https://registry.npmjs.org/@playwright/test/-/test-1.47.1.tgz";
-      sha512 = "dbWpcNQZ5nj16m+A5UNScYx7HX5trIy7g4phrcitn+Nk83S32EBX/CLU4hiF4RGKX/yRc93AAqtfaXB7JWBd4Q==";
+      url = "https://registry.npmjs.org/@playwright/test/-/test-1.47.2.tgz";
+      sha512 = "jTXRsoSPONAs8Za9QEQdyjFn+0ZQFjCiIztAIF6bi1HqhBzG9Ma7g1WotyiGqFSBRZjIEqMdT8RUlbk1QVhzCQ==";
     };
     dependencies = [
-      sources."playwright-1.47.1"
-      sources."playwright-core-1.47.1"
+      sources."playwright-1.47.2"
+      sources."playwright-core-1.47.2"
     ];
     buildInputs = globalBuildInputs;
     meta = {
