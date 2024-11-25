@@ -7,7 +7,7 @@ jobs:
   check-for-updates:
     runs-on: ubuntu-latest
     outputs:
-      updated: ${{ steps.updated.outputs.test }}
+      updated: ${{ steps.updated.outputs.updated }}
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27

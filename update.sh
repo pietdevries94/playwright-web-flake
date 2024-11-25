@@ -30,10 +30,10 @@ echo "$version" > "$root/version.txt"
 # Check if files have changed
 if git diff --exit-code; then
   echo "No changes"
-  echo "false" > updated.txt
+  echo "updated=false" > updated.txt
   exit 0
 fi
 
 # Update the node-packages.json
 (cd "$playwright_test"; node2nix -i node-packages.json)
-echo "true" > updated.txt
+echo "updated=true" > updated.txt
