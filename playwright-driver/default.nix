@@ -130,11 +130,11 @@ EOF
         BROWSERS_JSON=${driver}/package/browsers.json
       '' + lib.optionalString withChromium ''
         CHROMIUM_REVISION=$(jq -r '.browsers[] | select(.name == "chromium").revision' $BROWSERS_JSON)
-        mkdir -p $out/chromium-$CHROMIUM_REVISION/chrome-linux
+        mkdir -p $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux
 
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium-$CHROMIUM_REVISION/chrome-linux/chrome \
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/headless_shell \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''
