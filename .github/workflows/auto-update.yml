@@ -42,7 +42,12 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: ./update.sh
+      - uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          retry_wait_seconds: 60
+          max_attempts: 3
+          command: ./update.sh
       - run: nix build .#playwright-driver
       - run: nix flake check
 
