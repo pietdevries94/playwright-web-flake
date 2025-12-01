@@ -5,6 +5,9 @@ It does not contain playwright-python, because for my personal use I don't need 
 
 ## Usage
 
+> [!IMPORTANT]  
+> All versions up to 1.57.0 were published earlier with a now deprecated CDN url. These versions still work, but on 1 december 2025 all tags were retagged to use the new CDN url. If you used this flake before that date, please run `nix flake update` to get the updated version of whichever version of Playwright you were using.
+
 See the [`nix shell`](#with-nix-shell) example if all you need is access to the `playwright` binary in the current shell.
 
 If you intend to run a test suite:
