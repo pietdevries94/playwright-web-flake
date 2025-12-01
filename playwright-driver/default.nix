@@ -79,8 +79,8 @@ EOF
       passthru = {
         inherit filename;
         browsers = {
-          x86_64-linux = browsers-linux { };
-          aarch64-linux = browsers-linux { };
+          x86_64-linux = browsers-linux-x64 { };
+          aarch64-linux = browsers-linux-arm64 { };
           x86_64-darwin = browsers-mac;
           aarch64-darwin = browsers-mac;
         }.${system} or throwSystem;
@@ -111,7 +111,49 @@ EOF
     meta.platforms = lib.platforms.darwin;
   };
 
-  browsers-linux = { withChromium ? true }:
+  browsers-linux-x64 = { withChromium ? true }:
+    let
+      fontconfig = makeFontsConf {
+        fontDirectories = [ ];
+      };
+    in
+    runCommand
+      ("playwright-browsers"
+        + lib.optionalString withChromium "-chromium")
+      {
+        nativeBuildInputs = [
+          makeWrapper
+          jq
+        ];
+      }
+      (''
+        BROWSERS_JSON=${driver}/package/browsers.json
+      '' + lib.optionalString withChromium ''
+        CHROMIUM_REVISION=$(jq -r '.browsers[] | select(.name == "chromium").revision' $BROWSERS_JSON)
+        mkdir -p $out/chromium-$CHROMIUM_REVISION/chrome-linux64
+
+        # See here for the Chrome options:
+        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
+        makeWrapper ${chromium}/bin/chromium $out/chromium-$CHROMIUM_REVISION/chrome-linux64/chrome \
+          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
+          --set FONTCONFIG_FILE ${fontconfig}
+
+        # We also need to install the headless shell version of Chromium
+        CHROMIUM_HEADLESS_SHELL_REVISION=$(jq -r '.browsers[] | select(.name == "chromium-headless-shell").revision' $BROWSERS_JSON)
+        mkdir -p $out/chromium-headless-shell-$CHROMIUM_HEADLESS_SHELL_REVISION/chrome-linux64
+
+        # See here for the Chrome options:
+        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-headless-shell-linux64/chrome-headless-shell \
+          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
+          --set FONTCONFIG_FILE ${fontconfig}
+      '' + ''
+        FFMPEG_REVISION=$(jq -r '.browsers[] | select(.name == "ffmpeg").revision' $BROWSERS_JSON)
+        mkdir -p $out/ffmpeg-$FFMPEG_REVISION
+        ln -s ${ffmpeg}/bin/ffmpeg $out/ffmpeg-$FFMPEG_REVISION/ffmpeg-linux
+      '');
+
+  browsers-linux-arm64 = { withChromium ? true }:
     let
       fontconfig = makeFontsConf {
         fontDirectories = [ ];
@@ -144,7 +186,7 @@ EOF
 
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/headless_shell \
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/chrome \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''
