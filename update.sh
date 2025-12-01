@@ -9,7 +9,7 @@ playwright_test="$root/playwright-test"
 version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright/releases/latest | jq -r '.tag_name | sub("^v"; "")')
 
 fetch_driver_arch() {
-  nix-prefetch-url "https://playwright.azureedge.net/builds/driver/playwright-${version}-${1}.zip"
+  nix-prefetch-url "https://cdn.playwright.dev/builds/driver/playwright-${version}-${1}.zip"
 }
 
 replace_sha() {
