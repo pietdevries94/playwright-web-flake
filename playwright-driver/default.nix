@@ -34,7 +34,7 @@ let
       version = "1.49.1";
 
       src = fetchurl {
-        url = "https://playwright.azureedge.net/builds/driver/${filename}";
+        url = "https://cdn.playwright.dev/builds/driver/${filename}";
         sha256 = {
           x86_64-linux = "16c8i2j73ynpx9gz50k1q8mnpcdmm8yvgmpiz09jycdg4dpfvnkc";
           aarch64-linux = "1xkhgqvagy6lgabp70hw01cf7srh7jb7izp23g7yj196mz6ziaai";
