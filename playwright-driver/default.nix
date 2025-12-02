@@ -76,7 +76,7 @@ EOF
         runHook postInstall
       '';
 
-      passthru = {
+      passthru = rec {
         inherit filename;
         browsers = {
           x86_64-linux = browsers-linux-x64 { };
