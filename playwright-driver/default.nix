@@ -84,7 +84,7 @@ EOF
           x86_64-darwin = browsers-mac;
           aarch64-darwin = browsers-mac;
         }.${system} or throwSystem;
-        browsers-chromium = browsers-linux { };
+        browsers-chromium = browsers;
       };
     });
 
