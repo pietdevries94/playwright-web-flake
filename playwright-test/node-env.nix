@@ -208,7 +208,7 @@ let
   # Extract the Node.js source code which is used to compile packages with
   # native bindings
   nodeSources = runCommand "node-sources" {} ''
-    tar --no-same-owner --no-same-permissions -xf ${nodejs.src}
+    tar --no-same-owner --no-same-permissions -xf ${nodejs.src or pkgs.nodejs-slim.src}
     mv node-* $out
   '';
 
