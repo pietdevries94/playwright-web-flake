@@ -204,14 +204,14 @@ let
   components = {
     chromium = callPackage ./chromium.nix {
       inherit suffix system throwSystem;
-      inherit (playwright-core.passthru.browsersJSON.chromium) revision;
+      inherit (playwright-core.passthru.browsersJSON.chromium) revision browserVersion;
       fontconfig_file = makeFontsConf {
         fontDirectories = [ ];
       };
     };
     chromium-headless-shell = callPackage ./chromium-headless-shell.nix {
       inherit suffix system throwSystem;
-      inherit (playwright-core.passthru.browsersJSON.chromium) revision;
+      inherit (playwright-core.passthru.browsersJSON.chromium) revision browserVersion;
     };
     firefox = callPackage ./firefox.nix {
       inherit suffix system throwSystem;
