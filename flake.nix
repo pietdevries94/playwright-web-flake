@@ -1,10 +1,19 @@
 {
   description = "A flake for playwright";
 
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -12,8 +21,8 @@
       in
       {
         packages = {
-          playwright-test = pkgs.callPackage ./playwright-test/wrapped.nix { };
-          playwright-driver = pkgs.callPackage ./playwright-driver { };
+          playwright-test = (pkgs.callPackage ./playwright-driver/driver.nix { }).playwright-test;
+          playwright-driver = (pkgs.callPackage ./playwright-driver/driver.nix { }).playwright-core;
         };
 
         devShells.default = pkgs.mkShell {
