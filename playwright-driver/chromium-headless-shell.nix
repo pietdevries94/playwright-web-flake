@@ -1,6 +1,7 @@
 {
   fetchzip,
   revision,
+  browserVersion,
   suffix,
   system,
   throwSystem,
@@ -27,7 +28,12 @@ let
   linux = stdenv.mkDerivation {
     name = "playwright-chromium-headless-shell";
     src = fetchzip {
-      url = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-headless-shell-${suffix}.zip";
+      url =
+        {
+          x86_64-linux = "https://cdn.playwright.dev/builds/cft/${browserVersion}/linux64/chrome-headless-shell-linux64.zip";
+          aarch64-linux = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-headless-shell-${suffix}.zip";
+        }
+        .${system} or throwSystem;
       stripRoot = false;
       hash =
         {
@@ -64,7 +70,12 @@ let
   };
 
   darwin = fetchzip {
-    url = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-headless-shell-${suffix}.zip";
+    url =
+      {
+        x86_64-darwin = "https://cdn.playwright.dev/builds/cft/${browserVersion}/mac-x64/chrome-headless-shell-mac-x64.zip";
+        aarch64-darwin = "https://cdn.playwright.dev/builds/cft/${browserVersion}/mac-arm64/chrome-headless-shell-mac-arm64.zip";
+      }
+      .${system} or throwSystem;
     stripRoot = false;
     hash =
       {

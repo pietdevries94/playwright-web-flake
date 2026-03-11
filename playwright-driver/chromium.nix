@@ -5,6 +5,7 @@
   chromium,
   fetchzip,
   revision,
+  browserVersion,
   suffix,
   system,
   throwSystem,
@@ -44,7 +45,12 @@ let
   chromium-linux = stdenv.mkDerivation {
     name = "playwright-chromium";
     src = fetchzip {
-      url = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-${suffix}.zip";
+      url =
+        {
+          x86_64-linux = "https://cdn.playwright.dev/builds/cft/${browserVersion}/linux64/chrome-linux64.zip";
+          aarch64-linux = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-${suffix}.zip";
+        }
+        .${system} or throwSystem;
       hash =
         {
           x86_64-linux = "sha256-dJSO05xOzlSl/EwOWNQCeuSb+lhUU6NlGBnRu59irnM=";
@@ -111,7 +117,12 @@ let
     '';
   };
   chromium-darwin = fetchzip {
-    url = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-${suffix}.zip";
+    url =
+      {
+        x86_64-darwin = "https://cdn.playwright.dev/builds/cft/${browserVersion}/mac-x64/chrome-mac-x64.zip";
+        aarch64-darwin = "https://cdn.playwright.dev/builds/cft/${browserVersion}/mac-arm64/chrome-mac-arm64.zip";
+      }
+      .${system} or throwSystem;
     stripRoot = false;
     hash =
       {
