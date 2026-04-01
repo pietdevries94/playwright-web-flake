@@ -48,10 +48,27 @@
   zlib,
   suffix,
   revision,
+  revisionOverrides ? {},
   system,
   throwSystem,
 }:
 let
+  # Determine the revision override key based on platform
+  revisionOverrideKey =
+    if system == "x86_64-darwin" then
+      "mac14"
+    else if system == "aarch64-darwin" then
+      "mac14-arm64"
+    else
+      null;
+
+  # Use revision override if available, otherwise fall back to base revision
+  revision' =
+    if revisionOverrideKey != null && revisionOverrides ? ${revisionOverrideKey} then
+      revisionOverrides.${revisionOverrideKey}
+    else
+      revision;
+
   suffix' =
     if lib.hasPrefix "linux" suffix then
       "ubuntu-22.04" + (lib.removePrefix "linux" suffix)
@@ -133,12 +150,12 @@ let
   webkit-linux = stdenv.mkDerivation {
     name = "playwright-webkit";
     src = fetchzip {
-      url = "https://cdn.playwright.dev/builds/webkit/${revision}/webkit-${suffix'}.zip";
+      url = "https://cdn.playwright.dev/builds/webkit/${revision'}/webkit-${suffix'}.zip";
       stripRoot = false;
       hash =
         {
-          x86_64-linux = "sha256-h9dM6RR5WhUPHdZgn5yiJlM7QrhlDVaivnaHQCEZbXQ=";
-          aarch64-linux = "sha256-sOtPdOBmPLqApGGVhgH51OW3aoTv1Y40RfCSax7CyC4=";
+          x86_64-linux = "sha256-JdNYUUJPGRZ1Mdm2yTzFshsyntNlRqZCtyicLrrUk7g=";
+          aarch64-linux = "sha256-tQqaU1TuIfAohpMibWu9TVw9tVPZhXzYKZTZ5N7HqIk=";
         }
         .${system} or throwSystem;
     };
@@ -214,12 +231,12 @@ let
     '';
   };
   webkit-darwin = fetchzip {
-    url = "https://cdn.playwright.dev/builds/webkit/${revision}/webkit-${suffix'}.zip";
+    url = "https://cdn.playwright.dev/builds/webkit/${revision'}/webkit-${suffix'}.zip";
     stripRoot = false;
     hash =
       {
-        x86_64-darwin = "sha256-CC/ByUmh4b5jC+6weTqSS4mY22du1xLIO4fBkFVvfDs=";
-        aarch64-darwin = "sha256-+y7Ftu7LSM7fpP2b6ycrhGvcIWu5q1W8hcrbn4mhVT8=";
+        x86_64-darwin = "sha256-zmxdNdptFJ+8sad6HICoJRNsVNdQ0j4kKKCPX9YsBE8=";
+        aarch64-darwin = "sha256-AbDHuUg8jLNPWur6hieDdY8Kc2+PmlXRJGD46yujam4=";
       }
       .${system} or throwSystem;
   };

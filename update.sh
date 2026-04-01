@@ -28,9 +28,9 @@ major_minor() {
     echo "${1%.*}"
 }
 
-sed -i "s/version =\s*\"[^\$]*\"/version = \"$driver_version\"/" "$playwright_driver_file"
+sed -i "s|version =\s*\"[^\$]*\"|version = \"$driver_version\"|" "$playwright_driver_file"
 driver_new_hash=$(nix-prefetch-github --rev "v$driver_version" "Microsoft" "playwright" | jq -r '.hash')
-sed -i "s/hash =\s*\"[^\$]*\"/hash = \"$driver_new_hash\"/" "$playwright_driver_file"
+sed -i "s|hash =\s*\"[^\$]*\"|hash = \"$driver_new_hash\"|" "$playwright_driver_file"
 
 temp_dir=$(mktemp -d)
 trap 'rm -rf "$temp_dir"' EXIT
@@ -51,6 +51,43 @@ prefetch_browser() {
     # nix-prefetch is used to obtain sha with `stripRoot = false`
     # doesn't work on macOS https://github.com/msteen/nix-prefetch/issues/53
     nix-prefetch --option extra-experimental-features flakes -q "{ stdenv, fetchzip }: stdenv.mkDerivation { name=\"browser\"; src = fetchzip { url = \"$url\"; stripRoot = $strip_root; }; }"
+}
+
+get_revision() {
+    local name="$1"
+    local platform="$2"
+    local arch="$3"
+    local base_revision="$4"
+    local override_key=""
+
+    # Determine the revision override key based on platform and arch
+    if [ "$platform" = "darwin" ]; then
+        if [ "$name" = "webkit" ]; then
+            if [ "$arch" = "x86_64" ]; then
+                override_key="mac14"
+            else
+                override_key="mac14-arm64"
+            fi
+        elif [ "$name" = "ffmpeg" ]; then
+            if [ "$arch" = "x86_64" ]; then
+                override_key="mac12"
+            else
+                override_key="mac12-arm64"
+            fi
+        fi
+    fi
+
+    # Check for revision override
+    if [ -n "$override_key" ]; then
+        local override_revision
+        override_revision="$(jq -r ".browsers[\"$name\"].revisionOverrides[\"$override_key\"] // empty" "$playwright_browsers_file")"
+        if [ -n "$override_revision" ]; then
+            echo "$override_revision"
+            return
+        fi
+    fi
+
+    echo "$base_revision"
 }
 
 browser_download_url() {
@@ -87,6 +124,12 @@ browser_download_url() {
             echo "https://cdn.playwright.dev/chrome-for-testing-public/${browser_version}/${cft_platform}/${artifact}-${cft_platform}.zip"
             return
         fi
+    fi
+
+    # Webkit on darwin uses a different CDN path
+    if [ "$name" = "webkit" ] && [ "$platform" = "darwin" ]; then
+        echo "https://cdn.playwright.dev/builds/${buildname}/${revision}/${name}-${suffix}.zip"
+        return
     fi
 
     echo "https://cdn.playwright.dev/dbazure/download/playwright/builds/${buildname}/${revision}/${name}-${suffix}.zip"
@@ -130,10 +173,18 @@ update_browser() {
         buildname="$name"
     fi
 
-    revision="$(jq -r ".browsers[\"$buildname\"].revision" "$playwright_browsers_file")"
+    local base_revision
+    base_revision="$(jq -r ".browsers[\"$buildname\"].revision" "$playwright_browsers_file")"
     browser_version="$(jq -r ".browsers[\"$buildname\"].browserVersion // empty" "$playwright_browsers_file")"
-    x86_64_url="$(browser_download_url "$name" "$buildname" "$platform" "x86_64" "$revision" "$browser_version" "$suffix")"
-    aarch64_url="$(browser_download_url "$name" "$buildname" "$platform" "aarch64" "$revision" "$browser_version" "$aarch64_suffix")"
+
+    # Get platform-specific revisions (handles revisionOverrides)
+    local x86_64_revision
+    local aarch64_revision
+    x86_64_revision="$(get_revision "$name" "$platform" "x86_64" "$base_revision")"
+    aarch64_revision="$(get_revision "$name" "$platform" "aarch64" "$base_revision")"
+
+    x86_64_url="$(browser_download_url "$name" "$buildname" "$platform" "x86_64" "$x86_64_revision" "$browser_version" "$suffix")"
+    aarch64_url="$(browser_download_url "$name" "$buildname" "$platform" "aarch64" "$aarch64_revision" "$browser_version" "$aarch64_suffix")"
     replace_sha "$root/playwright-driver/$name.nix" "x86_64-$platform" \
         "$(prefetch_browser "$x86_64_url" "$stripRoot")"
     replace_sha "$root/playwright-driver/$name.nix" "aarch64-$platform" \
