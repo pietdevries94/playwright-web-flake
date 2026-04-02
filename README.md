@@ -35,6 +35,40 @@ nix develop github:pietdevries94/playwright-web-flake
 which playwright && playwright --version && playwright open nixos.org
 ```
 
+### Playwright MCP Server
+
+Run the [Playwright MCP server](https://github.com/Microsoft/playwright-mcp) for use with AI assistants like Claude.
+
+```sh
+nix shell github:pietdevries94/playwright-web-flake#playwright-mcp
+```
+
+Example configuration for Claude Desktop (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "nix",
+      "args": ["shell", "github:pietdevries94/playwright-web-flake#playwright-mcp", "--command", "playwright-mcp", "--headless"]
+    }
+  }
+}
+```
+
+Example configuration for Claude Code (`.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "nix",
+      "args": ["shell", "github:pietdevries94/playwright-web-flake#playwright-mcp", "--command", "playwright-mcp", "--headless"]
+    }
+  }
+}
+```
+
 ### In a flake
 
 1. Create a flake.nix with the content shown below.

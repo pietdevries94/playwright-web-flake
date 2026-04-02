@@ -264,6 +264,6 @@ let
   );
 in
 {
-  playwright-core = playwright-core;
-  playwright-test = playwright-test;
+  inherit playwright-core;
+  inherit playwright-test;
 }

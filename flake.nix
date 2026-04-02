@@ -21,8 +21,11 @@
       in
       {
         packages = {
-          playwright-test = (pkgs.callPackage ./playwright-driver/driver.nix { }).playwright-test;
+          inherit ((pkgs.callPackage ./playwright-driver/driver.nix { })) playwright-test;
           playwright-driver = (pkgs.callPackage ./playwright-driver/driver.nix { }).playwright-core;
+          playwright-mcp = pkgs.callPackage ./playwright-mcp/package.nix {
+            inherit (self.packages.${system}) playwright-driver;
+          };
         };
 
         checks = {
@@ -35,6 +38,12 @@
           playwright-driver = pkgs.runCommand "check-playwright-driver" { } ''
             test -d "${self.packages.${system}.playwright-driver.browsers}"
             test $(ls "${self.packages.${system}.playwright-driver.browsers}" | wc -l) -gt 0
+            touch $out
+          '';
+          playwright-mcp = pkgs.runCommand "check-playwright-mcp" {
+            nativeBuildInputs = [ self.packages.${system}.playwright-mcp ];
+          } ''
+            playwright-mcp --help
             touch $out
           '';
         };
