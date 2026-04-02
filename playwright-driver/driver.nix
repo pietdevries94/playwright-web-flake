@@ -2,8 +2,6 @@
   lib,
   buildNpmPackage,
   stdenv,
-  chromium,
-  ffmpeg,
   jq,
   nodejs,
   fetchFromGitHub,
@@ -11,7 +9,6 @@
   callPackage,
   makeFontsConf,
   makeWrapper,
-  runCommand,
   cacert,
 }:
 let
@@ -152,7 +149,7 @@ let
     };
   };
 
-  playwright-core = stdenv.mkDerivation (finalAttrs: {
+  playwright-core = stdenv.mkDerivation (_: {
     pname = "playwright-core";
     inherit (playwright) version src meta;
 
@@ -176,7 +173,7 @@ let
     };
   });
 
-  playwright-test = stdenv.mkDerivation (finalAttrs: {
+  playwright-test = stdenv.mkDerivation (_: {
     pname = "playwright-test";
     inherit (playwright) version src;
 
@@ -234,9 +231,6 @@ let
       withWebkit ? true, # may require `export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"`
       withFfmpeg ? true,
       withChromiumHeadlessShell ? true,
-      fontconfig_file ? makeFontsConf {
-        fontDirectories = [ ];
-      },
     }:
     let
       browsers =

@@ -49,7 +49,7 @@
   zlib,
   suffix,
   revision,
-  revisionOverrides ? {},
+  revisionOverrides ? { },
   system,
   throwSystem,
 }:
@@ -78,7 +78,7 @@ let
     else
       suffix;
   libvpx' = libvpx.overrideAttrs (
-    finalAttrs: previousAttrs: {
+    finalAttrs: _: {
       version = "1.12.0";
       src = fetchFromGitHub {
         owner = "webmproject";
@@ -89,7 +89,7 @@ let
     }
   );
   libavif' = libavif.overrideAttrs (
-    finalAttrs: previousAttrs: {
+    finalAttrs: _: {
       version = "0.9.3";
       src = fetchFromGitHub {
         owner = "AOMediaCodec";
@@ -103,7 +103,7 @@ let
   );
 
   libjxl' = libjxl.overrideAttrs (
-    finalAttrs: previousAttrs: {
+    finalAttrs: _: {
       version = "0.8.2";
       src = fetchFromGitHub {
         owner = "libjxl";

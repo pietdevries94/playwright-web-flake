@@ -1,9 +1,8 @@
 {
-  lib,
   fetchzip,
   suffix,
   revision,
-  revisionOverrides ? {},
+  revisionOverrides ? { },
   system,
   throwSystem,
 }:

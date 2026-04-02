@@ -1,8 +1,6 @@
 {
-  runCommand,
   makeWrapper,
   fontconfig_file,
-  chromium,
   fetchzip,
   revision,
   browserVersion,
