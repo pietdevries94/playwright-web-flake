@@ -24,8 +24,11 @@ buildNpmPackage rec {
   '';
 
   postInstall = ''
-    # Fix workspace symlinks: copy the workspace package into the expected location
-    local root="$out/lib/node_modules/playwright-mcp-internal"
+    # Fix workspace symlinks: copy the workspace package into the expected location.
+    # The workspace structure requires manual fixup because npm workspaces create
+    # symlinks that don't work in the Nix store. We copy the package into place
+    # and recreate the symlinks to make the CLI functional.
+    local root="$out/lib/node_modules/${pname}"
     rm -f "$root/node_modules/@playwright/mcp"
     rm -f "$root/node_modules/.bin/playwright-mcp"
     mkdir -p "$root/packages"
