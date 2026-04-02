@@ -15,8 +15,10 @@ fi
 
 playwright_browsers_file="$root/playwright-driver/browsers.json"
 playwright_driver_file="$root/playwright-driver/driver.nix"
+playwright_mcp_file="$root/playwright-mcp/package.nix"
 playwright_raw_repo_url="https://raw.githubusercontent.com/microsoft/playwright"
 driver_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright/releases/latest | jq -r '.tag_name | sub("^v"; "")')
+mcp_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright-mcp/releases/latest | jq -r '.tag_name | sub("^v"; "")')
 browser_names=(chromium chromium-headless-shell firefox webkit ffmpeg)
 browser_platforms=(linux darwin)
 
@@ -33,7 +35,9 @@ driver_new_hash=$(nix-prefetch-github --rev "v$driver_version" "Microsoft" "play
 sed -i "s|hash =\s*\"[^\$]*\"|hash = \"$driver_new_hash\"|" "$playwright_driver_file"
 
 temp_dir=$(mktemp -d)
-trap 'rm -rf "$temp_dir"' EXIT
+mcp_temp_dir=""
+cleanup() { rm -rf "$temp_dir" "$mcp_temp_dir"; }
+trap cleanup EXIT
 
 # update binaries of browsers, used by playwright.
 replace_sha() {
@@ -234,3 +238,17 @@ done < <(
     # shellcheck disable=SC2016
     sed -n 's#^[[:space:]]*sourceRoot = "${src.name}\(.*\)";.*$#\1#p' "$playwright_driver_file"
 )
+
+# Update playwright-mcp
+echo "Updating playwright-mcp to v${mcp_version}..."
+sed -i "s|version = \"[^\"]*\"|version = \"${mcp_version}\"|" "$playwright_mcp_file"
+mcp_new_hash=$(nix-prefetch-github --rev "v${mcp_version}" "Microsoft" "playwright-mcp" | jq -r '.hash')
+sed -i "s|hash = \"[^\"]*\"|hash = \"${mcp_new_hash}\"|" "$playwright_mcp_file"
+
+# Update playwright-mcp npmDepsHash
+mcp_temp_dir=$(mktemp -d)
+mcp_lock_url="https://raw.githubusercontent.com/microsoft/playwright-mcp/v${mcp_version}/package-lock.json"
+curl -fsSL -o "$mcp_temp_dir/package-lock.json" "$mcp_lock_url"
+mcp_npm_hash=$(prefetch-npm-deps "$mcp_temp_dir/package-lock.json")
+sed -i "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${mcp_npm_hash}\"|" "$playwright_mcp_file"
+echo "playwright-mcp updated to v${mcp_version}"
