@@ -25,6 +25,20 @@
           playwright-driver = (pkgs.callPackage ./playwright-driver/driver.nix { }).playwright-core;
         };
 
+        checks = {
+          playwright-test = pkgs.runCommand "check-playwright-test" {
+            nativeBuildInputs = [ self.packages.${system}.playwright-test ];
+          } ''
+            playwright --version | grep "${self.packages.${system}.playwright-test.version}"
+            touch $out
+          '';
+          playwright-driver = pkgs.runCommand "check-playwright-driver" { } ''
+            test -d "${self.packages.${system}.playwright-driver.browsers}"
+            test $(ls "${self.packages.${system}.playwright-driver.browsers}" | wc -l) -gt 0
+            touch $out
+          '';
+        };
+
         devShells.default = pkgs.mkShell {
           packages = [
             self.packages.${system}.playwright-test

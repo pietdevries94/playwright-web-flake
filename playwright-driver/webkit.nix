@@ -19,6 +19,7 @@
   gst_all_1,
   harfbuzz,
   harfbuzzFull,
+  hyphen,
   icu70,
   lcms,
   libavif,
@@ -179,6 +180,7 @@ let
       gst_all_1.gstreamer
       harfbuzz
       harfbuzzFull
+      hyphen
       icu70
       lcms
       libavif'
