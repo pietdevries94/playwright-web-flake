@@ -43,7 +43,9 @@ Run the [Playwright MCP server](https://github.com/Microsoft/playwright-mcp) for
 nix shell github:pietdevries94/playwright-web-flake#playwright-mcp
 ```
 
-Example configuration for Claude Desktop (`claude_desktop_config.json`):
+#### Configuration
+
+Add the following to your MCP configuration file:
 
 ```json
 {
@@ -56,18 +58,12 @@ Example configuration for Claude Desktop (`claude_desktop_config.json`):
 }
 ```
 
-Example configuration for Claude Code (`.mcp.json`):
+**Configuration file locations:**
 
-```json
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "nix",
-      "args": ["shell", "github:pietdevries94/playwright-web-flake#playwright-mcp", "--command", "playwright-mcp", "--headless"]
-    }
-  }
-}
-```
+| Tool | Config File Path |
+|------|------------------|
+| Claude Desktop | `~/.config/claude/claude_desktop_config.json` (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`) |
+| Claude Code | `.mcp.json` (in project root) |
 
 ### In a flake
 
