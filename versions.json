@@ -1,0 +1,51 @@
+{
+  "driver": {
+    "version": "1.59.1",
+    "hash": "sha256-kiH1jDyt5xMWc5C2dytoDC9fi1b5tWXZG8S6KEpuotM=",
+    "npmDepsHashes": {
+      "/packages/playwright/bundles/babel": "sha256-ByCy4go8PM0ksDg+2DcJPyoKG7Z0uIqKM647ZQwYwAE=",
+      "/packages/playwright/bundles/expect": "sha256-PbPCsMqRkfU2c/mCsLSagew84XTgeO6H5+isNZQl2ek=",
+      "/packages/playwright/bundles/utils": "sha256-BTaF1atpK+kG++ZJBUK4r3A7mbN2vv3xpDmb1NiNngE=",
+      "/packages/playwright-core/bundles/utils": "sha256-O8X80rTT10ht97towSocANnGwH4fH1f3nZMSl8TOc+Y=",
+      "/packages/playwright-core/bundles/zip": "sha256-5BHgCelIPh8ljIcdrO4AHafjqfLowDwJcpN+mD13Syw=",
+      "": "sha256-H3kKFthmZH4fqFPQA34w7iw2rubpEKLlJ9jaW6mpuyo="
+    }
+  },
+  "browsers": {
+    "chromium": {
+      "x86_64-linux": "sha256-GtaJk9Qr1bTbDfpB+noGlLcIDEIS2uzDiV5rb2DZhVQ=",
+      "aarch64-linux": "sha256-jsesQ6juzMPQzmn0Ygb8hmpxCeLHJVBL89qto5yuh5s=",
+      "x86_64-darwin": "sha256-CxnLSe+sZYskO7H5f3cA+BlWCZsFOPpp1gVG5s37r80=",
+      "aarch64-darwin": "sha256-n3JLK+hJwzPihC2qSHrSCYPz3jonZNz7GMgXiPBLaS0="
+    },
+    "chromium-headless-shell": {
+      "x86_64-linux": "sha256-kQCw0nQHHuUIfn8rGVcN7Ip6ZOk5c3Or+GG5RvSica4=",
+      "aarch64-linux": "sha256-s2IIjSY5t9AtT05dUS0mp4fPlaixND9+Cg0+0S8Kkx8=",
+      "x86_64-darwin": "sha256-kzbLpzzMpBurQHyGaz561A0K46GzgWPP2JSQKRV6C+Y=",
+      "aarch64-darwin": "sha256-67ekk37uq5ITq9ZvwPTZhhqEgQY17g/3KJ/vnqZz3h0="
+    },
+    "firefox": {
+      "x86_64-linux": "sha256-vbFI+7y3zayi5HmR1cTHPbcFCi6bvF3OVoAu8MygyEo=",
+      "aarch64-linux": "sha256-7+C3fsIRVo4pfFOPgN7gD0P+fxC6juTMaTzjthq+mno=",
+      "x86_64-darwin": "sha256-OfNmamn82tJ8+eY6DC8a3AynmhObZ8E0GTegF8l7km4=",
+      "aarch64-darwin": "sha256-WEYhmqGhGvO47i/OICJgXyqj64Wt52juJDEe7nD7HXU="
+    },
+    "webkit": {
+      "x86_64-linux": "sha256-JdNYUUJPGRZ1Mdm2yTzFshsyntNlRqZCtyicLrrUk7g=",
+      "aarch64-linux": "sha256-tQqaU1TuIfAohpMibWu9TVw9tVPZhXzYKZTZ5N7HqIk=",
+      "x86_64-darwin": "sha256-zmxdNdptFJ+8sad6HICoJRNsVNdQ0j4kKKCPX9YsBE8=",
+      "aarch64-darwin": "sha256-AbDHuUg8jLNPWur6hieDdY8Kc2+PmlXRJGD46yujam4="
+    },
+    "ffmpeg": {
+      "x86_64-linux": "sha256-AWTiui+ccKHxsIaQSgc5gWCJT5gYwIWzAEqSuKgVqZU=",
+      "aarch64-linux": "sha256-1mOKO2lcnlwLsC6ob//xKnKrCOp94pw8X14uBxCdj0Q=",
+      "x86_64-darwin": "sha256-ED6noxSDeEUt2DkIQ4gNe/kL+zHVeb2AD5klBk93F88=",
+      "aarch64-darwin": "sha256-3Adnvb7zvMXKFOhb8uuj5kx0wEIFicmckYx9WLlNNf0="
+    }
+  },
+  "mcp": {
+    "version": "0.0.70",
+    "hash": "sha256-dvFFG+/cYy09RjEMDIWncTNCcyaKoKH52qweYq0HHxU=",
+    "npmDepsHash": "sha256-tyVigQYA/viB8Ycg++SfPF6WEWWulnfuJXZYOBGhhOQ="
+  }
+}

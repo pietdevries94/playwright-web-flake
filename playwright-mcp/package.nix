@@ -3,19 +3,20 @@
   buildNpmPackage,
   fetchFromGitHub,
   playwright-driver,
+  versions,
 }:
 buildNpmPackage rec {
   pname = "playwright-mcp";
-  version = "0.0.70";
+  inherit (versions.mcp) version;
 
   src = fetchFromGitHub {
     owner = "Microsoft";
     repo = "playwright-mcp";
     tag = "v${version}";
-    hash = "sha256-dvFFG+/cYy09RjEMDIWncTNCcyaKoKH52qweYq0HHxU=";
+    inherit (versions.mcp) hash;
   };
 
-  npmDepsHash = "sha256-tyVigQYA/viB8Ycg++SfPF6WEWWulnfuJXZYOBGhhOQ=";
+  inherit (versions.mcp) npmDepsHash;
   npmWorkspace = "packages/playwright-mcp";
 
   postPatch = ''
@@ -33,8 +34,21 @@ buildNpmPackage rec {
     rm -f "$root/node_modules/.bin/playwright-mcp"
     mkdir -p "$root/packages"
     cp -r packages/playwright-mcp "$root/packages/"
+    mkdir -p "$root/node_modules/@playwright"
+    mkdir -p "$root/node_modules/.bin"
     ln -s "$root/packages/playwright-mcp" "$root/node_modules/@playwright/mcp"
     ln -s "$root/packages/playwright-mcp/cli.js" "$root/node_modules/.bin/playwright-mcp"
+
+    # Fix symlinks in playwright-mcp-internal if it exists
+    local internal="$out/lib/node_modules/playwright-mcp-internal"
+    if [ -d "$internal" ]; then
+      rm -f "$internal/node_modules/@playwright/mcp"
+      rm -f "$internal/node_modules/.bin/playwright-mcp"
+      mkdir -p "$internal/node_modules/@playwright"
+      mkdir -p "$internal/node_modules/.bin"
+      ln -s "$root/packages/playwright-mcp" "$internal/node_modules/@playwright/mcp"
+      ln -s "$root/packages/playwright-mcp/cli.js" "$internal/node_modules/.bin/playwright-mcp"
+    fi
 
     wrapProgram $out/bin/playwright-mcp \
       --set PLAYWRIGHT_BROWSERS_PATH ${playwright-driver.browsers} \

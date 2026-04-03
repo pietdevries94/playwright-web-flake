@@ -1,5 +1,5 @@
 #!/usr/bin/env nix-shell
-#!nix-shell -i bash -p curl gnused common-updater-scripts jq prefetch-npm-deps unzip nix-prefetch nix-prefetch-github
+#!nix-shell -i bash -p curl jq prefetch-npm-deps unzip nix-prefetch nix-prefetch-github
 # shellcheck shell=bash
 set -euo pipefail
 set -x
@@ -13,9 +13,8 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
     github_api_curl_args=(-u ":$GITHUB_TOKEN")
 fi
 
+versions_file="$root/versions.json"
 playwright_browsers_file="$root/playwright-driver/browsers.json"
-playwright_driver_file="$root/playwright-driver/driver.nix"
-playwright_mcp_file="$root/playwright-mcp/package.nix"
 playwright_raw_repo_url="https://raw.githubusercontent.com/microsoft/playwright"
 driver_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright/releases/latest | jq -r '.tag_name | sub("^v"; "")')
 mcp_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright-mcp/releases/latest | jq -r '.tag_name | sub("^v"; "")')
@@ -30,30 +29,18 @@ major_minor() {
     echo "${1%.*}"
 }
 
-sed -i "s|version =\s*\"[^\$]*\"|version = \"$driver_version\"|" "$playwright_driver_file"
+# Compute driver source hash
 driver_new_hash=$(nix-prefetch-github --rev "v$driver_version" "Microsoft" "playwright" | jq -r '.hash')
-sed -i "s|hash =\s*\"[^\$]*\"|hash = \"$driver_new_hash\"|" "$playwright_driver_file"
 
 temp_dir=$(mktemp -d)
 mcp_temp_dir=""
 cleanup() { rm -rf "$temp_dir" "$mcp_temp_dir"; }
 trap cleanup EXIT
 
-# update binaries of browsers, used by playwright.
-replace_sha() {
-    local target_file="$1"
-    local attr_name="$2"
-    local new_hash="$3"
-
-    sed -i "s|$attr_name = \".\{44,52\}\"|$attr_name = \"$new_hash\"|" "$target_file"
-}
-
 prefetch_browser() {
     local url="$1"
     local strip_root="$2"
 
-    # nix-prefetch is used to obtain sha with `stripRoot = false`
-    # doesn't work on macOS https://github.com/msteen/nix-prefetch/issues/53
     nix-prefetch --option extra-experimental-features flakes -q "{ stdenv, fetchzip }: stdenv.mkDerivation { name=\"browser\"; src = fetchzip { url = \"$url\"; stripRoot = $strip_root; }; }"
 }
 
@@ -64,7 +51,6 @@ get_revision() {
     local base_revision="$4"
     local override_key=""
 
-    # Determine the revision override key based on platform and arch
     if [ "$platform" = "darwin" ]; then
         if [ "$name" = "webkit" ]; then
             if [ "$arch" = "x86_64" ]; then
@@ -81,7 +67,6 @@ get_revision() {
         fi
     fi
 
-    # Check for revision override
     if [ -n "$override_key" ]; then
         local override_revision
         override_revision="$(jq -r ".browsers[\"$name\"].revisionOverrides[\"$override_key\"] // empty" "$playwright_browsers_file")"
@@ -105,8 +90,6 @@ browser_download_url() {
     local artifact
     local cft_platform
 
-    # Chromium and chromium-headless-shell use Chrome for Testing artifacts on
-    # Linux/macOS on x86_64 and aarch64-darwin.
     if [ "$name" = "chromium" ] || [ "$name" = "chromium-headless-shell" ]; then
         if [ "$name" = "chromium" ]; then
             artifact="chrome"
@@ -130,7 +113,6 @@ browser_download_url() {
         fi
     fi
 
-    # Webkit on darwin uses a different CDN path
     if [ "$name" = "webkit" ] && [ "$platform" = "darwin" ]; then
         echo "https://cdn.playwright.dev/builds/${buildname}/${revision}/${name}-${suffix}.zip"
         return
@@ -139,6 +121,9 @@ browser_download_url() {
     echo "https://cdn.playwright.dev/dbazure/download/playwright/builds/${buildname}/${revision}/${name}-${suffix}.zip"
 }
 
+# Declare associative array for browser hashes
+declare -A browser_hashes
+
 update_browser() {
     local name="$1"
     local platform="$2"
@@ -146,10 +131,7 @@ update_browser() {
     local suffix
     local aarch64_suffix
     local buildname
-    local revision
     local browser_version
-    local x86_64_url
-    local aarch64_url
 
     if [ "$platform" = "darwin" ]; then
         if [ "$name" = "webkit" ]; then
@@ -181,20 +163,21 @@ update_browser() {
     base_revision="$(jq -r ".browsers[\"$buildname\"].revision" "$playwright_browsers_file")"
     browser_version="$(jq -r ".browsers[\"$buildname\"].browserVersion // empty" "$playwright_browsers_file")"
 
-    # Get platform-specific revisions (handles revisionOverrides)
     local x86_64_revision
     local aarch64_revision
     x86_64_revision="$(get_revision "$name" "$platform" "x86_64" "$base_revision")"
     aarch64_revision="$(get_revision "$name" "$platform" "aarch64" "$base_revision")"
 
+    local x86_64_url
+    local aarch64_url
     x86_64_url="$(browser_download_url "$name" "$buildname" "$platform" "x86_64" "$x86_64_revision" "$browser_version" "$suffix")"
     aarch64_url="$(browser_download_url "$name" "$buildname" "$platform" "aarch64" "$aarch64_revision" "$browser_version" "$aarch64_suffix")"
-    replace_sha "$root/playwright-driver/$name.nix" "x86_64-$platform" \
-        "$(prefetch_browser "$x86_64_url" "$stripRoot")"
-    replace_sha "$root/playwright-driver/$name.nix" "aarch64-$platform" \
-        "$(prefetch_browser "$aarch64_url" "$stripRoot")"
+
+    browser_hashes["${name}.x86_64-${platform}"]="$(prefetch_browser "$x86_64_url" "$stripRoot")"
+    browser_hashes["${name}.aarch64-${platform}"]="$(prefetch_browser "$aarch64_url" "$stripRoot")"
 }
 
+# Update browsers.json from upstream
 curl -fsSL \
     "https://raw.githubusercontent.com/microsoft/playwright/v${driver_version}/packages/playwright-core/browsers.json" \
     | jq '
@@ -207,48 +190,137 @@ curl -fsSL \
       )
     ' > "$playwright_browsers_file"
 
+# Compute all browser hashes
 for platform in "${browser_platforms[@]}"; do
     for browser in "${browser_names[@]}"; do
         update_browser "$browser" "$platform"
     done
 done
 
-# Update package-lock.json files for all npm deps that are built in playwright
-
-# Download `package-lock.json` for a given sourceRoot path and update its hash.
-update_hash() {
-    local source_root_path="$1"
-    local download_url
-    local lock_file
-    local new_hash
-    local source_root_pattern
-
-    download_url="${playwright_raw_repo_url}/v${driver_version}${source_root_path}/package-lock.json"
-    lock_file="${temp_dir}/$(echo "$source_root_path" | tr '/.' '__').package-lock.json"
-    curl -fsSL -o "$lock_file" "$download_url"
-    new_hash=$(prefetch-npm-deps "$lock_file")
-
-    source_root_pattern=$(printf '%s\n' "$source_root_path" | sed 's/[][\\/.*^$+?(){}|]/\\&/g')
-    sed -E -i "/sourceRoot = \"\\\$\\{src.name\\}${source_root_pattern}\";/,/npmDepsHash = / s#npmDepsHash = \"[^\"]*\";#npmDepsHash = \"${new_hash}\";#" "$playwright_driver_file"
-}
-
-while IFS= read -r source_root_path; do
-    update_hash "$source_root_path"
-done < <(
-    # shellcheck disable=SC2016
-    sed -n 's#^[[:space:]]*sourceRoot = "${src.name}\(.*\)";.*$#\1#p' "$playwright_driver_file"
+# Compute npm dependency hashes for driver bundles
+declare -A npm_hashes
+npm_source_roots=(
+    "/packages/playwright/bundles/babel"
+    "/packages/playwright/bundles/expect"
+    "/packages/playwright/bundles/utils"
+    "/packages/playwright-core/bundles/utils"
+    "/packages/playwright-core/bundles/zip"
+    ""
 )
 
-# Update playwright-mcp
-echo "Updating playwright-mcp to v${mcp_version}..."
-sed -i "s|version = \"[^\"]*\"|version = \"${mcp_version}\"|" "$playwright_mcp_file"
-mcp_new_hash=$(nix-prefetch-github --rev "v${mcp_version}" "Microsoft" "playwright-mcp" | jq -r '.hash')
-sed -i "s|hash = \"[^\"]*\"|hash = \"${mcp_new_hash}\"|" "$playwright_mcp_file"
+for source_root_path in "${npm_source_roots[@]}"; do
+    if [ -n "$source_root_path" ]; then
+        download_url="${playwright_raw_repo_url}/v${driver_version}${source_root_path}/package-lock.json"
+    else
+        download_url="${playwright_raw_repo_url}/v${driver_version}/package-lock.json"
+    fi
+    lock_file="${temp_dir}/$(echo "$source_root_path" | tr '/.' '__').package-lock.json"
+    curl -fsSL -o "$lock_file" "$download_url"
+    # Use safe key by replacing / with _ for associative array
+    # Use "root" for empty path since bash doesn't allow empty string keys
+    if [ -n "$source_root_path" ]; then
+        safe_key=$(echo "$source_root_path" | tr '/' '_')
+    else
+        safe_key="root"
+    fi
+    npm_hashes["$safe_key"]=$(prefetch-npm-deps "$lock_file")
+done
 
-# Update playwright-mcp npmDepsHash
+# Compute MCP hashes
+echo "Updating playwright-mcp to v${mcp_version}..."
+mcp_new_hash=$(nix-prefetch-github --rev "v${mcp_version}" "Microsoft" "playwright-mcp" | jq -r '.hash')
 mcp_temp_dir=$(mktemp -d)
 mcp_lock_url="https://raw.githubusercontent.com/microsoft/playwright-mcp/v${mcp_version}/package-lock.json"
 curl -fsSL -o "$mcp_temp_dir/package-lock.json" "$mcp_lock_url"
 mcp_npm_hash=$(prefetch-npm-deps "$mcp_temp_dir/package-lock.json")
-sed -i "s|npmDepsHash = \"[^\"]*\"|npmDepsHash = \"${mcp_npm_hash}\"|" "$playwright_mcp_file"
+
+# Build versions.json with all computed values
+jq -n \
+    --arg driver_version "$driver_version" \
+    --arg driver_hash "$driver_new_hash" \
+    --arg npm_babel "${npm_hashes["_packages_playwright_bundles_babel"]}" \
+    --arg npm_expect "${npm_hashes["_packages_playwright_bundles_expect"]}" \
+    --arg npm_utils "${npm_hashes["_packages_playwright_bundles_utils"]}" \
+    --arg npm_utils_core "${npm_hashes["_packages_playwright-core_bundles_utils"]}" \
+    --arg npm_zip "${npm_hashes["_packages_playwright-core_bundles_zip"]}" \
+    --arg npm_root "${npm_hashes["root"]}" \
+    --arg chromium_x86_64_linux "${browser_hashes["chromium.x86_64-linux"]}" \
+    --arg chromium_aarch64_linux "${browser_hashes["chromium.aarch64-linux"]}" \
+    --arg chromium_x86_64_darwin "${browser_hashes["chromium.x86_64-darwin"]}" \
+    --arg chromium_aarch64_darwin "${browser_hashes["chromium.aarch64-darwin"]}" \
+    --arg chromium_hs_x86_64_linux "${browser_hashes["chromium-headless-shell.x86_64-linux"]}" \
+    --arg chromium_hs_aarch64_linux "${browser_hashes["chromium-headless-shell.aarch64-linux"]}" \
+    --arg chromium_hs_x86_64_darwin "${browser_hashes["chromium-headless-shell.x86_64-darwin"]}" \
+    --arg chromium_hs_aarch64_darwin "${browser_hashes["chromium-headless-shell.aarch64-darwin"]}" \
+    --arg firefox_x86_64_linux "${browser_hashes["firefox.x86_64-linux"]}" \
+    --arg firefox_aarch64_linux "${browser_hashes["firefox.aarch64-linux"]}" \
+    --arg firefox_x86_64_darwin "${browser_hashes["firefox.x86_64-darwin"]}" \
+    --arg firefox_aarch64_darwin "${browser_hashes["firefox.aarch64-darwin"]}" \
+    --arg webkit_x86_64_linux "${browser_hashes["webkit.x86_64-linux"]}" \
+    --arg webkit_aarch64_linux "${browser_hashes["webkit.aarch64-linux"]}" \
+    --arg webkit_x86_64_darwin "${browser_hashes["webkit.x86_64-darwin"]}" \
+    --arg webkit_aarch64_darwin "${browser_hashes["webkit.aarch64-darwin"]}" \
+    --arg ffmpeg_x86_64_linux "${browser_hashes["ffmpeg.x86_64-linux"]}" \
+    --arg ffmpeg_aarch64_linux "${browser_hashes["ffmpeg.aarch64-linux"]}" \
+    --arg ffmpeg_x86_64_darwin "${browser_hashes["ffmpeg.x86_64-darwin"]}" \
+    --arg ffmpeg_aarch64_darwin "${browser_hashes["ffmpeg.aarch64-darwin"]}" \
+    --arg mcp_version "$mcp_version" \
+    --arg mcp_hash "$mcp_new_hash" \
+    --arg mcp_npm_hash "$mcp_npm_hash" \
+    '{
+      driver: {
+        version: $driver_version,
+        hash: $driver_hash,
+        npmDepsHashes: {
+          "/packages/playwright/bundles/babel": $npm_babel,
+          "/packages/playwright/bundles/expect": $npm_expect,
+          "/packages/playwright/bundles/utils": $npm_utils,
+          "/packages/playwright-core/bundles/utils": $npm_utils_core,
+          "/packages/playwright-core/bundles/zip": $npm_zip,
+          "": $npm_root
+        }
+      },
+      browsers: {
+        chromium: {
+          "x86_64-linux": $chromium_x86_64_linux,
+          "aarch64-linux": $chromium_aarch64_linux,
+          "x86_64-darwin": $chromium_x86_64_darwin,
+          "aarch64-darwin": $chromium_aarch64_darwin
+        },
+        "chromium-headless-shell": {
+          "x86_64-linux": $chromium_hs_x86_64_linux,
+          "aarch64-linux": $chromium_hs_aarch64_linux,
+          "x86_64-darwin": $chromium_hs_x86_64_darwin,
+          "aarch64-darwin": $chromium_hs_aarch64_darwin
+        },
+        firefox: {
+          "x86_64-linux": $firefox_x86_64_linux,
+          "aarch64-linux": $firefox_aarch64_linux,
+          "x86_64-darwin": $firefox_x86_64_darwin,
+          "aarch64-darwin": $firefox_aarch64_darwin
+        },
+        webkit: {
+          "x86_64-linux": $webkit_x86_64_linux,
+          "aarch64-linux": $webkit_aarch64_linux,
+          "x86_64-darwin": $webkit_x86_64_darwin,
+          "aarch64-darwin": $webkit_aarch64_darwin
+        },
+        ffmpeg: {
+          "x86_64-linux": $ffmpeg_x86_64_linux,
+          "aarch64-linux": $ffmpeg_aarch64_linux,
+          "x86_64-darwin": $ffmpeg_x86_64_darwin,
+          "aarch64-darwin": $ffmpeg_aarch64_darwin
+        }
+      },
+      mcp: {
+        version: $mcp_version,
+        hash: $mcp_hash,
+        npmDepsHash: $mcp_npm_hash
+      }
+    }' > "$versions_file"
+
 echo "playwright-mcp updated to v${mcp_version}"
+echo "All versions written to versions.json"
+
+# Write version for commit message
+echo "${driver_version}" > version.txt

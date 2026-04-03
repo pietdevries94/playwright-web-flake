@@ -22,6 +22,7 @@
   libxkbcommon,
   nspr,
   nss,
+  hashes,
   ...
 }:
 let
@@ -35,12 +36,7 @@ let
         }
         .${system} or throwSystem;
       stripRoot = false;
-      hash =
-        {
-          x86_64-linux = "sha256-kQCw0nQHHuUIfn8rGVcN7Ip6ZOk5c3Or+GG5RvSica4=";
-          aarch64-linux = "sha256-s2IIjSY5t9AtT05dUS0mp4fPlaixND9+Cg0+0S8Kkx8=";
-        }
-        .${system} or throwSystem;
+      hash = hashes.${system} or throwSystem;
     };
 
     nativeBuildInputs = [
@@ -77,12 +73,7 @@ let
       }
       .${system} or throwSystem;
     stripRoot = false;
-    hash =
-      {
-        x86_64-darwin = "sha256-kzbLpzzMpBurQHyGaz561A0K46GzgWPP2JSQKRV6C+Y=";
-        aarch64-darwin = "sha256-67ekk37uq5ITq9ZvwPTZhhqEgQY17g/3KJ/vnqZz3h0=";
-      }
-      .${system} or throwSystem;
+    hash = hashes.${system} or throwSystem;
   };
 in
 {

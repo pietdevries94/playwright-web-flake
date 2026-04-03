@@ -50,6 +50,7 @@
   suffix,
   revision,
   revisionOverrides ? { },
+  hashes,
   system,
   throwSystem,
 }:
@@ -153,12 +154,7 @@ let
     src = fetchzip {
       url = "https://cdn.playwright.dev/builds/webkit/${revision'}/webkit-${suffix'}.zip";
       stripRoot = false;
-      hash =
-        {
-          x86_64-linux = "sha256-JdNYUUJPGRZ1Mdm2yTzFshsyntNlRqZCtyicLrrUk7g=";
-          aarch64-linux = "sha256-tQqaU1TuIfAohpMibWu9TVw9tVPZhXzYKZTZ5N7HqIk=";
-        }
-        .${system} or throwSystem;
+      hash = hashes.${system} or throwSystem;
     };
 
     nativeBuildInputs = [
@@ -235,12 +231,7 @@ let
   webkit-darwin = fetchzip {
     url = "https://cdn.playwright.dev/builds/webkit/${revision'}/webkit-${suffix'}.zip";
     stripRoot = false;
-    hash =
-      {
-        x86_64-darwin = "sha256-zmxdNdptFJ+8sad6HICoJRNsVNdQ0j4kKKCPX9YsBE8=";
-        aarch64-darwin = "sha256-AbDHuUg8jLNPWur6hieDdY8Kc2+PmlXRJGD46yujam4=";
-      }
-      .${system} or throwSystem;
+    hash = hashes.${system} or throwSystem;
   };
 in
 {
