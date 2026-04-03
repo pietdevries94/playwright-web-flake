@@ -38,36 +38,67 @@ jobs:
           new_browsers=$(cat playwright-driver/browsers.json)
 
           body="## Summary"$'\n\n'
-          body+="### Core packages"$'\n\n'
-          body+="| Package | Old | New |"$'\n'
-          body+="|---------|-----|-----|"$'\n'
-          body+="| Playwright driver | \`${old_driver}\` | \`${new_driver}\` |"$'\n'
-          body+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n\n'
 
-          body+="### Flake inputs"$'\n\n'
-          body+="| Input | Old | New |"$'\n'
-          body+="|-------|-----|-----|"$'\n'
-          for input in nixpkgs flake-utils; do
-            old_rev=$(echo "$old_lock" | jq -r ".nodes[\"${input}\"].locked.rev // \"—\"" | head -c 7)
-            new_rev=$(jq -r ".nodes[\"${input}\"].locked.rev // \"—\"" flake.lock | head -c 7)
-            body+="| ${input} | \`${old_rev}\` | \`${new_rev}\` |"$'\n'
+          # Core packages section (only if something changed)
+          core_rows=""
+          if [ "$old_driver" != "$new_driver" ]; then
+            core_rows+="| Playwright driver | \`${old_driver}\` | \`${new_driver}\` |"$'\n'
+          fi
+          if [ "$old_mcp" != "$new_mcp" ]; then
+            core_rows+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n'
+          fi
+          if [ -n "$core_rows" ]; then
+            body+="### Core packages"$'\n\n'
+            body+="| Package | Old | New |"$'\n'
+            body+="|---------|-----|-----|"$'\n'
+            body+="$core_rows"$'\n'
+          fi
+
+          # Flake inputs section (dynamically read inputs from flake.lock)
+          flake_rows=""
+          for input in $(jq -r '.nodes.root.inputs | keys[]' flake.lock); do
+            old_rev=$(echo "$old_lock" | jq -r ".nodes[\"${input}\"].locked.rev // empty" | head -c 7)
+            new_rev=$(jq -r ".nodes[\"${input}\"].locked.rev // empty" flake.lock | head -c 7)
+            if [ "$old_rev" != "$new_rev" ]; then
+              flake_rows+="| ${input} | \`${old_rev}\` | \`${new_rev}\` |"$'\n'
+            fi
           done
-          body+=$'\n'
+          if [ -n "$flake_rows" ]; then
+            body+="### Flake inputs"$'\n\n'
+            body+="| Input | Old | New |"$'\n'
+            body+="|-------|-----|-----|"$'\n'
+            body+="$flake_rows"$'\n'
+          fi
 
-          body+="### Browser versions"$'\n\n'
-          body+="| Browser | Old | New |"$'\n'
-          body+="|---------|-----|-----|"$'\n'
-
+          # Browser versions section (only changed browsers)
+          browser_rows=""
           for browser in chromium firefox webkit; do
             old_ver=$(echo "$old_browsers" | jq -r ".browsers[\"${browser}\"].browserVersion // \"—\"")
             new_ver=$(echo "$new_browsers" | jq -r ".browsers[\"${browser}\"].browserVersion // \"—\"")
-            title=$(echo "$new_browsers" | jq -r ".browsers[\"${browser}\"].title // \"${browser}\"")
-            body+="| ${title} | \`${old_ver}\` | \`${new_ver}\` |"$'\n'
+            if [ "$old_ver" != "$new_ver" ]; then
+              title=$(echo "$new_browsers" | jq -r ".browsers[\"${browser}\"].title // \"${browser}\"")
+              browser_rows+="| ${title} | \`${old_ver}\` | \`${new_ver}\` |"$'\n'
+            fi
           done
+          if [ -n "$browser_rows" ]; then
+            body+="### Browser versions"$'\n\n'
+            body+="| Browser | Old | New |"$'\n'
+            body+="|---------|-----|-----|"$'\n'
+            body+="$browser_rows"$'\n'
+          fi
 
-          body+=$'\n'"### Release notes"$'\n\n'
-          body+="- [Playwright v${new_driver}](https://github.com/microsoft/playwright/releases/tag/v${new_driver})"$'\n'
-          body+="- [Playwright MCP v${new_mcp}](https://github.com/microsoft/playwright-mcp/releases/tag/v${new_mcp})"$'\n'
+          # Release notes (only for changed packages)
+          notes=""
+          if [ "$old_driver" != "$new_driver" ]; then
+            notes+="- [Playwright v${new_driver}](https://github.com/microsoft/playwright/releases/tag/v${new_driver})"$'\n'
+          fi
+          if [ "$old_mcp" != "$new_mcp" ]; then
+            notes+="- [Playwright MCP v${new_mcp}](https://github.com/microsoft/playwright-mcp/releases/tag/v${new_mcp})"$'\n'
+          fi
+          if [ -n "$notes" ]; then
+            body+="### Release notes"$'\n\n'
+            body+="$notes"
+          fi
 
           echo "$body" > /tmp/pr-body.md
       - name: Create or update Pull Request
