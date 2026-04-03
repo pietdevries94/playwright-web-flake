@@ -72,9 +72,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(cat version.txt)
-          branch="auto-update/v${version}"
+          branch="auto-update/$(date +%Y-%m-%d)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git branch -D "$branch" 2>/dev/null || true
+          git push origin --delete "$branch" 2>/dev/null || true
           git checkout -b "$branch"
           git add flake.lock versions.json playwright-driver/browsers.json
           git commit -m "Update to version ${version}"
