@@ -8,11 +8,6 @@ root="$(dirname "$(readlink -f "$0")")"
 repo_root="$(git -C "$root" rev-parse --show-toplevel)"
 cd "$repo_root"
 
-github_api_curl_args=()
-if [ -n "${GITHUB_TOKEN:-}" ]; then
-    github_api_curl_args=(-u ":$GITHUB_TOKEN")
-fi
-
 versions_file="$root/versions.json"
 playwright_browsers_file="$root/playwright-driver/browsers.json"
 playwright_raw_repo_url="https://raw.githubusercontent.com/microsoft/playwright"
@@ -20,14 +15,6 @@ driver_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.g
 mcp_version=$(curl ${GITHUB_TOKEN:+" -u \":$GITHUB_TOKEN\""} -s https://api.github.com/repos/microsoft/playwright-mcp/releases/latest | jq -r '.tag_name | sub("^v"; "")')
 browser_names=(chromium chromium-headless-shell firefox webkit ffmpeg)
 browser_platforms=(linux darwin)
-
-github_api_get() {
-    curl "${github_api_curl_args[@]}" -fsSL "$1"
-}
-
-major_minor() {
-    echo "${1%.*}"
-}
 
 # Compute driver source hash
 driver_new_hash=$(nix-prefetch-github --rev "v$driver_version" "Microsoft" "playwright" | jq -r '.hash')
