@@ -15,11 +15,12 @@ jobs:
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix flake update
       - run: ./update.sh
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet versions.json playwright-driver/browsers.json 2>/dev/null; then
+          if git diff --quiet flake.lock versions.json playwright-driver/browsers.json 2>/dev/null; then
             echo "updated=false" >> "$GITHUB_OUTPUT"
           else
             echo "updated=true" >> "$GITHUB_OUTPUT"
@@ -32,6 +33,8 @@ jobs:
           new_driver=$(jq -r '.driver.version' versions.json)
           old_mcp=$(git show HEAD:versions.json | jq -r '.mcp.version')
           new_mcp=$(jq -r '.mcp.version' versions.json)
+          old_nixpkgs=$(git show HEAD:flake.lock | jq -r '.nodes.nixpkgs.locked.rev // "—"' | head -c 7)
+          new_nixpkgs=$(jq -r '.nodes.nixpkgs.locked.rev // "—"' flake.lock | head -c 7)
 
           old_browsers=$(git show HEAD:playwright-driver/browsers.json)
           new_browsers=$(cat playwright-driver/browsers.json)
@@ -41,7 +44,8 @@ jobs:
           body+="| Package | Old | New |"$'\n'
           body+="|---------|-----|-----|"$'\n'
           body+="| Playwright driver | \`${old_driver}\` | \`${new_driver}\` |"$'\n'
-          body+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n\n'
+          body+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n'
+          body+="| nixpkgs | \`${old_nixpkgs}\` | \`${new_nixpkgs}\` |"$'\n\n'
 
           body+="### Browser versions"$'\n\n'
           body+="| Browser | Old | New |"$'\n'
@@ -72,7 +76,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add versions.json playwright-driver/browsers.json
+          git add flake.lock versions.json playwright-driver/browsers.json
           git commit -m "Update to version ${version}"
           git push -u origin "$branch"
           gh pr create \
