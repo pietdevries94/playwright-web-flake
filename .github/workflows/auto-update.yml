@@ -33,9 +33,7 @@ jobs:
           new_driver=$(jq -r '.driver.version' versions.json)
           old_mcp=$(git show HEAD:versions.json | jq -r '.mcp.version')
           new_mcp=$(jq -r '.mcp.version' versions.json)
-          old_nixpkgs=$(git show HEAD:flake.lock | jq -r '.nodes.nixpkgs.locked.rev // "—"' | head -c 7)
-          new_nixpkgs=$(jq -r '.nodes.nixpkgs.locked.rev // "—"' flake.lock | head -c 7)
-
+          old_lock=$(git show HEAD:flake.lock)
           old_browsers=$(git show HEAD:playwright-driver/browsers.json)
           new_browsers=$(cat playwright-driver/browsers.json)
 
@@ -44,8 +42,17 @@ jobs:
           body+="| Package | Old | New |"$'\n'
           body+="|---------|-----|-----|"$'\n'
           body+="| Playwright driver | \`${old_driver}\` | \`${new_driver}\` |"$'\n'
-          body+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n'
-          body+="| nixpkgs | \`${old_nixpkgs}\` | \`${new_nixpkgs}\` |"$'\n\n'
+          body+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n\n'
+
+          body+="### Flake inputs"$'\n\n'
+          body+="| Input | Old | New |"$'\n'
+          body+="|-------|-----|-----|"$'\n'
+          for input in nixpkgs flake-utils; do
+            old_rev=$(echo "$old_lock" | jq -r ".nodes[\"${input}\"].locked.rev // \"—\"" | head -c 7)
+            new_rev=$(jq -r ".nodes[\"${input}\"].locked.rev // \"—\"" flake.lock | head -c 7)
+            body+="| ${input} | \`${old_rev}\` | \`${new_rev}\` |"$'\n'
+          done
+          body+=$'\n'
 
           body+="### Browser versions"$'\n\n'
           body+="| Browser | Old | New |"$'\n'
@@ -62,10 +69,7 @@ jobs:
           body+="- [Playwright v${new_driver}](https://github.com/microsoft/playwright/releases/tag/v${new_driver})"$'\n'
           body+="- [Playwright MCP v${new_mcp}](https://github.com/microsoft/playwright-mcp/releases/tag/v${new_mcp})"$'\n'
 
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "body<<$EOF" >> "$GITHUB_OUTPUT"
-          echo "$body" >> "$GITHUB_OUTPUT"
-          echo "$EOF" >> "$GITHUB_OUTPUT"
+          echo "$body" > /tmp/pr-body.md
       - name: Create Pull Request
         if: steps.changes.outputs.updated == 'true'
         env:
@@ -84,4 +88,4 @@ jobs:
           gh pr create \
             --title "Auto-update dependencies $(date +%Y-%m-%d)" \
             --label "auto-update" \
-            --body "${{ steps.summary.outputs.body }}"
+            --body-file /tmp/pr-body.md
