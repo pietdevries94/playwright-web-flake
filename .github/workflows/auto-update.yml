@@ -70,7 +70,7 @@ jobs:
           body+="- [Playwright MCP v${new_mcp}](https://github.com/microsoft/playwright-mcp/releases/tag/v${new_mcp})"$'\n'
 
           echo "$body" > /tmp/pr-body.md
-      - name: Create Pull Request
+      - name: Create or update Pull Request
         if: steps.changes.outputs.updated == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -79,13 +79,18 @@ jobs:
           branch="auto-update/$(date +%Y-%m-%d)"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git branch -D "$branch" 2>/dev/null || true
-          git push origin --delete "$branch" 2>/dev/null || true
           git checkout -b "$branch"
           git add flake.lock versions.json playwright-driver/browsers.json
           git commit -m "Update to version ${version}"
-          git push -u origin "$branch"
-          gh pr create \
-            --title "Auto-update dependencies $(date +%Y-%m-%d)" \
-            --label "auto-update" \
-            --body-file /tmp/pr-body.md
+          git push --force -u origin "$branch"
+          existing_pr=$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" \
+              --title "Auto-update dependencies $(date +%Y-%m-%d)" \
+              --body-file /tmp/pr-body.md
+          else
+            gh pr create \
+              --title "Auto-update dependencies $(date +%Y-%m-%d)" \
+              --label "auto-update" \
+              --body-file /tmp/pr-body.md
+          fi
