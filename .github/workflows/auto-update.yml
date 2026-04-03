@@ -104,7 +104,7 @@ jobs:
       - name: Create or update Pull Request
         if: steps.changes.outputs.updated == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           version=$(cat version.txt)
           branch="auto-update/$(date +%Y-%m-%d)"
@@ -113,6 +113,7 @@ jobs:
           git checkout -b "$branch"
           git add flake.lock versions.json playwright-driver/browsers.json
           git commit -m "Update to version ${version}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           git push --force -u origin "$branch"
           existing_pr=$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')
           if [ -n "$existing_pr" ]; then
