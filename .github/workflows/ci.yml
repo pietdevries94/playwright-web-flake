@@ -2,19 +2,11 @@ name: "CI"
 on:
   pull_request:
 jobs:
-  check-linux:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: nix build .#playwright-driver
-      - run: nix flake check
-
-  check-darwin:
-    runs-on: macos-latest
+  check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
@@ -26,7 +18,7 @@ jobs:
 
   automerge:
     runs-on: ubuntu-latest
-    needs: [check-linux, check-darwin]
+    needs: [check]
     permissions: write-all
     if: contains(github.event.pull_request.labels.*.name, 'auto-update')
     steps:
