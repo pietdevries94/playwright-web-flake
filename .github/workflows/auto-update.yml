@@ -80,6 +80,6 @@ jobs:
           git commit -m "Update to version ${version}"
           git push -u origin "$branch"
           gh pr create \
-            --title "Update playwright to v${version}" \
+            --title "Auto-update dependencies $(date +%Y-%m-%d)" \
             --label "auto-update" \
             --body "${{ steps.summary.outputs.body }}"
