@@ -234,3 +234,12 @@ done < <(
     # shellcheck disable=SC2016
     sed -n 's#^[[:space:]]*sourceRoot = "${src.name}\(.*\)";.*$#\1#p' "$playwright_driver_file"
 )
+
+# Check if files have changed
+if git diff --exit-code; then
+	echo "No changes"
+	echo "updated=false" > updated.txt
+	exit 0
+fi
+
+echo "updated=true" > updated.txt
