@@ -235,6 +235,8 @@ done < <(
     sed -n 's#^[[:space:]]*sourceRoot = "${src.name}\(.*\)";.*$#\1#p' "$playwright_driver_file"
 )
 
+echo "$driver_version" > "$root/version.txt"
+
 # Check if files have changed
 if git diff --exit-code; then
 	echo "No changes"
