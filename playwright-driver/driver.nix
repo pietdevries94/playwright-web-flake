@@ -27,13 +27,13 @@ let
     }
     .${system} or throwSystem;
 
-  version = "1.59.0";
+  version = "1.59.1";
 
   src = fetchFromGitHub {
     owner = "Microsoft";
     repo = "playwright";
     rev = "v${version}";
-    hash = "sha256-RgP43A/NfiaPd/CmIBc0uzK69/IB0RH9Liv7tK/5rH4=";
+    hash = "sha256-kiH1jDyt5xMWc5C2dytoDC9fi1b5tWXZG8S6KEpuotM=";
   };
 
   babel-bundle = buildNpmPackage {
@@ -92,7 +92,7 @@ let
     inherit version src;
 
     sourceRoot = "${src.name}"; # update.sh depends on sourceRoot presence
-    npmDepsHash = "sha256-GoKbwMBJR2UvN35xNz3+AqpC+jysy5La2Xpe2YU2InY=";
+    npmDepsHash = "sha256-H3kKFthmZH4fqFPQA34w7iw2rubpEKLlJ9jaW6mpuyo=";
 
     nativeBuildInputs = [
       cacert
