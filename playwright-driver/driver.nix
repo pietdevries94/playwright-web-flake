@@ -2,8 +2,6 @@
   lib,
   buildNpmPackage,
   stdenv,
-  chromium,
-  ffmpeg,
   jq,
   nodejs,
   fetchFromGitHub,
@@ -11,8 +9,8 @@
   callPackage,
   makeFontsConf,
   makeWrapper,
-  runCommand,
   cacert,
+  versions,
 }:
 let
   inherit (stdenv.hostPlatform) system;
@@ -27,20 +25,20 @@ let
     }
     .${system} or throwSystem;
 
-  version = "1.59.0";
+  inherit (versions.driver) version;
 
   src = fetchFromGitHub {
     owner = "Microsoft";
     repo = "playwright";
     rev = "v${version}";
-    hash = "sha256-RgP43A/NfiaPd/CmIBc0uzK69/IB0RH9Liv7tK/5rH4=";
+    inherit (versions.driver) hash;
   };
 
   babel-bundle = buildNpmPackage {
     pname = "babel-bundle";
     inherit version src;
     sourceRoot = "${src.name}/packages/playwright/bundles/babel";
-    npmDepsHash = "sha256-ByCy4go8PM0ksDg+2DcJPyoKG7Z0uIqKM647ZQwYwAE=";
+    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/babel";
     dontNpmBuild = true;
     installPhase = ''
       cp -r . "$out"
@@ -50,7 +48,7 @@ let
     pname = "expect-bundle";
     inherit version src;
     sourceRoot = "${src.name}/packages/playwright/bundles/expect";
-    npmDepsHash = "sha256-PbPCsMqRkfU2c/mCsLSagew84XTgeO6H5+isNZQl2ek=";
+    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/expect";
     dontNpmBuild = true;
     installPhase = ''
       cp -r . "$out"
@@ -60,7 +58,7 @@ let
     pname = "utils-bundle";
     inherit version src;
     sourceRoot = "${src.name}/packages/playwright/bundles/utils";
-    npmDepsHash = "sha256-BTaF1atpK+kG++ZJBUK4r3A7mbN2vv3xpDmb1NiNngE=";
+    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/utils";
     dontNpmBuild = true;
     installPhase = ''
       cp -r . "$out"
@@ -70,7 +68,7 @@ let
     pname = "utils-bundle-core";
     inherit version src;
     sourceRoot = "${src.name}/packages/playwright-core/bundles/utils";
-    npmDepsHash = "sha256-O8X80rTT10ht97towSocANnGwH4fH1f3nZMSl8TOc+Y=";
+    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright-core/bundles/utils";
     dontNpmBuild = true;
     installPhase = ''
       cp -r . "$out"
@@ -80,7 +78,7 @@ let
     pname = "zip-bundle";
     inherit version src;
     sourceRoot = "${src.name}/packages/playwright-core/bundles/zip";
-    npmDepsHash = "sha256-5BHgCelIPh8ljIcdrO4AHafjqfLowDwJcpN+mD13Syw=";
+    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright-core/bundles/zip";
     dontNpmBuild = true;
     installPhase = ''
       cp -r . "$out"
@@ -91,8 +89,8 @@ let
     pname = "playwright";
     inherit version src;
 
-    sourceRoot = "${src.name}"; # update.sh depends on sourceRoot presence
-    npmDepsHash = "sha256-GoKbwMBJR2UvN35xNz3+AqpC+jysy5La2Xpe2YU2InY=";
+    sourceRoot = "${src.name}";
+    npmDepsHash = versions.driver.npmDepsHashes."";
 
     nativeBuildInputs = [
       cacert
@@ -152,7 +150,7 @@ let
     };
   };
 
-  playwright-core = stdenv.mkDerivation (finalAttrs: {
+  playwright-core = stdenv.mkDerivation (_: {
     pname = "playwright-core";
     inherit (playwright) version src meta;
 
@@ -176,7 +174,7 @@ let
     };
   });
 
-  playwright-test = stdenv.mkDerivation (finalAttrs: {
+  playwright-test = stdenv.mkDerivation (_: {
     pname = "playwright-test";
     inherit (playwright) version src;
 
@@ -205,6 +203,7 @@ let
     chromium = callPackage ./chromium.nix {
       inherit suffix system throwSystem;
       inherit (playwright-core.passthru.browsersJSON.chromium) revision browserVersion;
+      hashes = versions.browsers.chromium;
       fontconfig_file = makeFontsConf {
         fontDirectories = [ ];
       };
@@ -212,18 +211,22 @@ let
     chromium-headless-shell = callPackage ./chromium-headless-shell.nix {
       inherit suffix system throwSystem;
       inherit (playwright-core.passthru.browsersJSON.chromium) revision browserVersion;
+      hashes = versions.browsers."chromium-headless-shell";
     };
     firefox = callPackage ./firefox.nix {
       inherit suffix system throwSystem;
       inherit (playwright-core.passthru.browsersJSON.firefox) revision;
+      hashes = versions.browsers.firefox;
     };
     webkit = callPackage ./webkit.nix {
       inherit suffix system throwSystem;
       inherit (playwright-core.passthru.browsersJSON.webkit) revision revisionOverrides;
+      hashes = versions.browsers.webkit;
     };
     ffmpeg = callPackage ./ffmpeg.nix {
       inherit suffix system throwSystem;
       inherit (playwright-core.passthru.browsersJSON.ffmpeg) revision revisionOverrides;
+      hashes = versions.browsers.ffmpeg;
     };
   };
 
@@ -234,9 +237,6 @@ let
       withWebkit ? true, # may require `export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE="ubuntu-24.04"`
       withFfmpeg ? true,
       withChromiumHeadlessShell ? true,
-      fontconfig_file ? makeFontsConf {
-        fontDirectories = [ ];
-      },
     }:
     let
       browsers =
@@ -264,6 +264,6 @@ let
   );
 in
 {
-  playwright-core = playwright-core;
-  playwright-test = playwright-test;
+  inherit playwright-core;
+  inherit playwright-test;
 }

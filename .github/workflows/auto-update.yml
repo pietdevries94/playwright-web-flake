@@ -4,78 +4,124 @@ on:
   schedule:
     - cron: "0 0 * * *"
 jobs:
-  check-for-updates:
+  check-and-create-pr:
     runs-on: ubuntu-latest
-    outputs:
-      updated: ${{ steps.updated.outputs.updated }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: ./update.sh
-      - id: updated
-        run: cat updated.txt >> "$GITHUB_OUTPUT"
-
-  check-linux:
-    if: needs.check-for-updates.outputs.updated == 'true'
-    needs: check-for-updates
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - run: ./update.sh
-      - run: nix build .#playwright-driver
-      - run: nix flake check
-
-  check-darwin:
-    if: needs.check-for-updates.outputs.updated == 'true'
-    needs: check-for-updates
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v31
-        with:
-          nix_path: nixpkgs=channel:nixos-unstable
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 10
-          retry_wait_seconds: 60
-          max_attempts: 3
-          command: ./update.sh
-      - run: nix build .#playwright-driver
-      - run: nix flake check
-
-  push-updates:
-    needs: [check-for-updates, check-linux, check-darwin]
-    runs-on: ubuntu-latest
-
     permissions:
-      # Give the default GITHUB_TOKEN write permission to commit and push the
-      # added or changed files to the repository.
       contents: write
-
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix flake update
       - run: ./update.sh
-      - name: Set commit and tagging message
-        id: commit_message_step
+      - name: Check for changes
+        id: changes
         run: |
-          echo 'commit_message<<EOF' >> $GITHUB_OUTPUT
-          echo "Update to version $(cat version.txt)" >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
-          echo 'tagging_message<<EOF' >> $GITHUB_OUTPUT
-          cat version.txt >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: ${{ steps.commit_message_step.outputs.commit_message }}
-          tagging_message: ${{ steps.commit_message_step.outputs.tagging_message }}
+          if git diff --quiet flake.lock versions.json playwright-driver/browsers.json 2>/dev/null; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build PR summary
+        if: steps.changes.outputs.updated == 'true'
+        id: summary
+        run: |
+          old_driver=$(git show HEAD:versions.json | jq -r '.driver.version')
+          new_driver=$(jq -r '.driver.version' versions.json)
+          old_mcp=$(git show HEAD:versions.json | jq -r '.mcp.version')
+          new_mcp=$(jq -r '.mcp.version' versions.json)
+          old_lock=$(git show HEAD:flake.lock)
+          old_browsers=$(git show HEAD:playwright-driver/browsers.json)
+          new_browsers=$(cat playwright-driver/browsers.json)
+
+          body="## Summary"$'\n\n'
+
+          # Core packages section (only if something changed)
+          core_rows=""
+          if [ "$old_driver" != "$new_driver" ]; then
+            core_rows+="| Playwright driver | \`${old_driver}\` | \`${new_driver}\` |"$'\n'
+          fi
+          if [ "$old_mcp" != "$new_mcp" ]; then
+            core_rows+="| Playwright MCP | \`${old_mcp}\` | \`${new_mcp}\` |"$'\n'
+          fi
+          if [ -n "$core_rows" ]; then
+            body+="### Core packages"$'\n\n'
+            body+="| Package | Old | New |"$'\n'
+            body+="|---------|-----|-----|"$'\n'
+            body+="$core_rows"$'\n'
+          fi
+
+          # Flake inputs section (dynamically read inputs from flake.lock)
+          flake_rows=""
+          for input in $(jq -r '.nodes.root.inputs | keys[]' flake.lock); do
+            old_rev=$(echo "$old_lock" | jq -r ".nodes[\"${input}\"].locked.rev // empty" | head -c 7)
+            new_rev=$(jq -r ".nodes[\"${input}\"].locked.rev // empty" flake.lock | head -c 7)
+            if [ "$old_rev" != "$new_rev" ]; then
+              flake_rows+="| ${input} | \`${old_rev}\` | \`${new_rev}\` |"$'\n'
+            fi
+          done
+          if [ -n "$flake_rows" ]; then
+            body+="### Flake inputs"$'\n\n'
+            body+="| Input | Old | New |"$'\n'
+            body+="|-------|-----|-----|"$'\n'
+            body+="$flake_rows"$'\n'
+          fi
+
+          # Browser versions section (only changed browsers)
+          browser_rows=""
+          for browser in chromium firefox webkit; do
+            old_ver=$(echo "$old_browsers" | jq -r ".browsers[\"${browser}\"].browserVersion // \"—\"")
+            new_ver=$(echo "$new_browsers" | jq -r ".browsers[\"${browser}\"].browserVersion // \"—\"")
+            if [ "$old_ver" != "$new_ver" ]; then
+              title=$(echo "$new_browsers" | jq -r ".browsers[\"${browser}\"].title // \"${browser}\"")
+              browser_rows+="| ${title} | \`${old_ver}\` | \`${new_ver}\` |"$'\n'
+            fi
+          done
+          if [ -n "$browser_rows" ]; then
+            body+="### Browser versions"$'\n\n'
+            body+="| Browser | Old | New |"$'\n'
+            body+="|---------|-----|-----|"$'\n'
+            body+="$browser_rows"$'\n'
+          fi
+
+          # Release notes (only for changed packages)
+          notes=""
+          if [ "$old_driver" != "$new_driver" ]; then
+            notes+="- [Playwright v${new_driver}](https://github.com/microsoft/playwright/releases/tag/v${new_driver})"$'\n'
+          fi
+          if [ "$old_mcp" != "$new_mcp" ]; then
+            notes+="- [Playwright MCP v${new_mcp}](https://github.com/microsoft/playwright-mcp/releases/tag/v${new_mcp})"$'\n'
+          fi
+          if [ -n "$notes" ]; then
+            body+="### Release notes"$'\n\n'
+            body+="$notes"
+          fi
+
+          echo "$body" > /tmp/pr-body.md
+      - name: Create or update Pull Request
+        if: steps.changes.outputs.updated == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          branch="auto-update/$(date +%Y-%m-%d)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add flake.lock versions.json playwright-driver/browsers.json
+          git commit -m "Auto-update dependencies $(date +%Y-%m-%d)" -m "$(cat /tmp/pr-body.md)"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git push --force -u origin "$branch"
+          existing_pr=$(gh pr list --head "$branch" --json number --jq '.[0].number // empty')
+          if [ -n "$existing_pr" ]; then
+            gh pr edit "$existing_pr" \
+              --title "Auto-update dependencies $(date +%Y-%m-%d)" \
+              --body-file /tmp/pr-body.md
+          else
+            gh pr create \
+              --title "Auto-update dependencies $(date +%Y-%m-%d)" \
+              --label "auto-update" \
+              --body-file /tmp/pr-body.md
+          fi

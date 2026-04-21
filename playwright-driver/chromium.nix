@@ -1,8 +1,6 @@
 {
-  runCommand,
   makeWrapper,
   fontconfig_file,
-  chromium,
   fetchzip,
   revision,
   browserVersion,
@@ -39,6 +37,7 @@
   libXfixes,
   libXrandr,
   libxcb,
+  hashes,
   ...
 }:
 let
@@ -51,12 +50,7 @@ let
           aarch64-linux = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-${suffix}.zip";
         }
         .${system} or throwSystem;
-      hash =
-        {
-          x86_64-linux = "sha256-GtaJk9Qr1bTbDfpB+noGlLcIDEIS2uzDiV5rb2DZhVQ=";
-          aarch64-linux = "sha256-jsesQ6juzMPQzmn0Ygb8hmpxCeLHJVBL89qto5yuh5s=";
-        }
-        .${system} or throwSystem;
+      hash = hashes.${system} or throwSystem;
     };
 
     nativeBuildInputs = [
@@ -124,12 +118,7 @@ let
       }
       .${system} or throwSystem;
     stripRoot = false;
-    hash =
-      {
-        x86_64-darwin = "sha256-CxnLSe+sZYskO7H5f3cA+BlWCZsFOPpp1gVG5s37r80=";
-        aarch64-darwin = "sha256-n3JLK+hJwzPihC2qSHrSCYPz3jonZNz7GMgXiPBLaS0=";
-      }
-      .${system} or throwSystem;
+    hash = hashes.${system} or throwSystem;
   };
 in
 {
