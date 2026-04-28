@@ -44,8 +44,8 @@
     }
   },
   "mcp": {
-    "version": "0.0.70",
-    "hash": "sha256-dvFFG+/cYy09RjEMDIWncTNCcyaKoKH52qweYq0HHxU=",
-    "npmDepsHash": "sha256-tyVigQYA/viB8Ycg++SfPF6WEWWulnfuJXZYOBGhhOQ="
+    "version": "0.0.71",
+    "hash": "sha256-C4tXXpIbGdgedy5IdUi2xeSQwAo4v+++PC7rznX2sMc=",
+    "npmDepsHash": "sha256-MKCldBLhxEa4g9A3crj48bRbBfbnGbEntvf3aTgqYII="
   }
 }
