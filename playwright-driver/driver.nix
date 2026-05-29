@@ -34,55 +34,74 @@ let
     inherit (versions.driver) hash;
   };
 
-  babel-bundle = buildNpmPackage {
-    pname = "babel-bundle";
-    inherit version src;
-    sourceRoot = "${src.name}/packages/playwright/bundles/babel";
-    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/babel";
-    dontNpmBuild = true;
-    installPhase = ''
-      cp -r . "$out"
-    '';
-  };
-  expect-bundle = buildNpmPackage {
-    pname = "expect-bundle";
-    inherit version src;
-    sourceRoot = "${src.name}/packages/playwright/bundles/expect";
-    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/expect";
-    dontNpmBuild = true;
-    installPhase = ''
-      cp -r . "$out"
-    '';
-  };
-  utils-bundle = buildNpmPackage {
-    pname = "utils-bundle";
-    inherit version src;
-    sourceRoot = "${src.name}/packages/playwright/bundles/utils";
-    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright/bundles/utils";
-    dontNpmBuild = true;
-    installPhase = ''
-      cp -r . "$out"
-    '';
-  };
-  utils-bundle-core = buildNpmPackage {
-    pname = "utils-bundle-core";
-    inherit version src;
-    sourceRoot = "${src.name}/packages/playwright-core/bundles/utils";
-    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright-core/bundles/utils";
-    dontNpmBuild = true;
-    installPhase = ''
-      cp -r . "$out"
-    '';
-  };
-  zip-bundle = buildNpmPackage {
-    pname = "zip-bundle";
-    inherit version src;
-    sourceRoot = "${src.name}/packages/playwright-core/bundles/zip";
-    npmDepsHash = versions.driver.npmDepsHashes."/packages/playwright-core/bundles/zip";
-    dontNpmBuild = true;
-    installPhase = ''
-      cp -r . "$out"
-    '';
+  hasBundle =
+    hashPath:
+    versions.driver.npmDepsHashes ? ${hashPath} && versions.driver.npmDepsHashes.${hashPath} != "";
+
+  mkBundle =
+    {
+      pname,
+      sourceRoot,
+      hashPath,
+      bundleDir,
+    }:
+    let
+      drv = buildNpmPackage {
+        inherit pname version src sourceRoot;
+        npmDepsHash = versions.driver.npmDepsHashes.${hashPath};
+        dontNpmBuild = true;
+        installPhase = ''
+          cp -r . "$out"
+        '';
+      };
+    in
+    if hasBundle hashPath then
+      {
+        inherit drv;
+        symlink = ''
+          if [ -d ${bundleDir} ]; then
+            chmod +w ${bundleDir}
+            ln -s ${drv}/node_modules ${bundleDir}/node_modules
+          fi
+        '';
+      }
+    else
+      {
+        drv = null;
+        symlink = "";
+      };
+
+  bundles = {
+    babel = mkBundle {
+      pname = "babel-bundle";
+      sourceRoot = "${src.name}/packages/playwright/bundles/babel";
+      hashPath = "/packages/playwright/bundles/babel";
+      bundleDir = "packages/playwright/bundles/babel";
+    };
+    expect = mkBundle {
+      pname = "expect-bundle";
+      sourceRoot = "${src.name}/packages/playwright/bundles/expect";
+      hashPath = "/packages/playwright/bundles/expect";
+      bundleDir = "packages/playwright/bundles/expect";
+    };
+    utils = mkBundle {
+      pname = "utils-bundle";
+      sourceRoot = "${src.name}/packages/playwright/bundles/utils";
+      hashPath = "/packages/playwright/bundles/utils";
+      bundleDir = "packages/playwright/bundles/utils";
+    };
+    utils-core = mkBundle {
+      pname = "utils-bundle-core";
+      sourceRoot = "${src.name}/packages/playwright-core/bundles/utils";
+      hashPath = "/packages/playwright-core/bundles/utils";
+      bundleDir = "packages/playwright-core/bundles/utils";
+    };
+    zip = mkBundle {
+      pname = "zip-bundle";
+      sourceRoot = "${src.name}/packages/playwright-core/bundles/zip";
+      hashPath = "/packages/playwright-core/bundles/zip";
+      bundleDir = "packages/playwright-core/bundles/zip";
+    };
   };
 
   playwright = buildNpmPackage {
@@ -103,16 +122,11 @@ let
       sed -i '/\/\/ Update test runner./,/^\s*$/{d}' utils/build/build.js
       sed -i '/^\/\/ Update bundles\./,/^[[:space:]]*}$/d' utils/build/build.js
       sed -i '/execSync/d' ./utils/generate_third_party_notice.js
-      chmod +w packages/playwright/bundles/babel
-      ln -s ${babel-bundle}/node_modules packages/playwright/bundles/babel/node_modules
-      chmod +w packages/playwright/bundles/expect
-      ln -s ${expect-bundle}/node_modules packages/playwright/bundles/expect/node_modules
-      chmod +w packages/playwright/bundles/utils
-      ln -s ${utils-bundle}/node_modules packages/playwright/bundles/utils/node_modules
-      chmod +w packages/playwright-core/bundles/utils
-      ln -s ${utils-bundle-core}/node_modules packages/playwright-core/bundles/utils/node_modules
-      chmod +w packages/playwright-core/bundles/zip
-      ln -s ${zip-bundle}/node_modules packages/playwright-core/bundles/zip/node_modules
+      ${bundles.babel.symlink}
+      ${bundles.expect.symlink}
+      ${bundles.utils.symlink}
+      ${bundles.utils-core.symlink}
+      ${bundles.zip.symlink}
     '';
 
     installPhase = ''
