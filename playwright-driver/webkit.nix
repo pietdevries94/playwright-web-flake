@@ -35,6 +35,7 @@
   libsoup_3,
   libtasn1,
   libvpx,
+  libbacktrace,
   libwebp,
   libwpe,
   libwpe-fdo,
@@ -195,6 +196,7 @@ let
       libwpe
       libwpe-fdo
       libvpx'
+      libbacktrace
       libxml2
       libxslt
       libgbm
