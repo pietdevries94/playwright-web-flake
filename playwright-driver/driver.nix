@@ -119,9 +119,9 @@ let
     ELECTRON_SKIP_BINARY_DOWNLOAD = true;
 
     postPatch = ''
-      sed -i '/\/\/ Update test runner./,/^\s*$/{d}' utils/build/build.js
-      sed -i '/^\/\/ Update bundles\./,/^[[:space:]]*}$/d' utils/build/build.js
-      sed -i '/execSync/d' ./utils/generate_third_party_notice.js
+      [ -f utils/build/build.js ] && sed -i '/\/\/ Update test runner./,/^\s*$/{d}' utils/build/build.js || true
+      [ -f utils/build/build.js ] && sed -i '/^\/\/ Update bundles\./,/^[[:space:]]*}$/d' utils/build/build.js || true
+      [ -f ./utils/generate_third_party_notice.js ] && sed -i '/execSync/d' ./utils/generate_third_party_notice.js || true
       ${bundles.babel.symlink}
       ${bundles.expect.symlink}
       ${bundles.utils.symlink}
