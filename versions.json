@@ -1,38 +1,33 @@
 {
   "driver": {
-    "version": "1.59.1",
-    "hash": "sha256-kiH1jDyt5xMWc5C2dytoDC9fi1b5tWXZG8S6KEpuotM=",
+    "version": "1.60.0",
+    "hash": "sha256-jtQHyphdZsS8hf7uhe9zrx16Uf+kgLLha6dTCsCTT/8=",
     "npmDepsHashes": {
-      "/packages/playwright/bundles/babel": "sha256-ByCy4go8PM0ksDg+2DcJPyoKG7Z0uIqKM647ZQwYwAE=",
-      "/packages/playwright/bundles/expect": "sha256-PbPCsMqRkfU2c/mCsLSagew84XTgeO6H5+isNZQl2ek=",
-      "/packages/playwright/bundles/utils": "sha256-BTaF1atpK+kG++ZJBUK4r3A7mbN2vv3xpDmb1NiNngE=",
-      "/packages/playwright-core/bundles/utils": "sha256-O8X80rTT10ht97towSocANnGwH4fH1f3nZMSl8TOc+Y=",
-      "/packages/playwright-core/bundles/zip": "sha256-5BHgCelIPh8ljIcdrO4AHafjqfLowDwJcpN+mD13Syw=",
-      "": "sha256-H3kKFthmZH4fqFPQA34w7iw2rubpEKLlJ9jaW6mpuyo="
+      "": "sha256-K1bCDURaq2+kaqGQcOL1tD6tQt/37pyDFWq2njUVNS4="
     }
   },
   "browsers": {
     "chromium": {
-      "x86_64-linux": "sha256-GtaJk9Qr1bTbDfpB+noGlLcIDEIS2uzDiV5rb2DZhVQ=",
-      "aarch64-linux": "sha256-jsesQ6juzMPQzmn0Ygb8hmpxCeLHJVBL89qto5yuh5s=",
-      "x86_64-darwin": "sha256-CxnLSe+sZYskO7H5f3cA+BlWCZsFOPpp1gVG5s37r80=",
-      "aarch64-darwin": "sha256-n3JLK+hJwzPihC2qSHrSCYPz3jonZNz7GMgXiPBLaS0="
+      "x86_64-linux": "sha256-TnplS4C/PPcmyWrMCqWh7c1KrpevHJFKO0gfh46M3tk=",
+      "aarch64-linux": "sha256-E7Nmz9fET0kXNf7ooaUBDHtDBWTGq4JDKKUbo/UfA+c=",
+      "x86_64-darwin": "sha256-W6xH9iX81H+o689LZvJZO7tF79V0Gv7AksUwflPuQ8A=",
+      "aarch64-darwin": "sha256-T0rVp4M/ymrJtNVtF0RDmIOT6kC3/tRkzPYrwvFbEQY="
     },
     "chromium-headless-shell": {
-      "x86_64-linux": "sha256-kQCw0nQHHuUIfn8rGVcN7Ip6ZOk5c3Or+GG5RvSica4=",
-      "aarch64-linux": "sha256-s2IIjSY5t9AtT05dUS0mp4fPlaixND9+Cg0+0S8Kkx8=",
-      "x86_64-darwin": "sha256-kzbLpzzMpBurQHyGaz561A0K46GzgWPP2JSQKRV6C+Y=",
-      "aarch64-darwin": "sha256-67ekk37uq5ITq9ZvwPTZhhqEgQY17g/3KJ/vnqZz3h0="
+      "x86_64-linux": "sha256-Nr0/uczFTBTqvRPR0c/wflIqG5relgKfC9XsMOdE9iE=",
+      "aarch64-linux": "sha256-veEBmsivFDrG1bArQ780+gMbsoT1Zv4VLcIPpgn4M/I=",
+      "x86_64-darwin": "sha256-GEomMUuaIjhBEuWF/HyMohseJtwKOn5MCgh6kIB9ZeE=",
+      "aarch64-darwin": "sha256-7laJtPAiy6pYAxCNBxRYk+FmriXemmLW8UYteEdVrd0="
     },
     "firefox": {
-      "x86_64-linux": "sha256-vbFI+7y3zayi5HmR1cTHPbcFCi6bvF3OVoAu8MygyEo=",
-      "aarch64-linux": "sha256-7+C3fsIRVo4pfFOPgN7gD0P+fxC6juTMaTzjthq+mno=",
-      "x86_64-darwin": "sha256-OfNmamn82tJ8+eY6DC8a3AynmhObZ8E0GTegF8l7km4=",
-      "aarch64-darwin": "sha256-WEYhmqGhGvO47i/OICJgXyqj64Wt52juJDEe7nD7HXU="
+      "x86_64-linux": "sha256-ET3JUpCvA+0zFIYFadh2l1MxRug54V8CY1eax/f+ZDI=",
+      "aarch64-linux": "sha256-FdWY9mn9tBwqcmWNgEQ9GRZXXUsOZDr5UkfmSmafUek=",
+      "x86_64-darwin": "sha256-eXS88URYKAbFP6/3pukb2qgrdqVBOR99VGyqKPFZ2Tw=",
+      "aarch64-darwin": "sha256-lVNFp20v+zBC3Up9ElhWh8C8ptEUqCHEsfQiuPp3lVM="
     },
     "webkit": {
-      "x86_64-linux": "sha256-JdNYUUJPGRZ1Mdm2yTzFshsyntNlRqZCtyicLrrUk7g=",
-      "aarch64-linux": "sha256-tQqaU1TuIfAohpMibWu9TVw9tVPZhXzYKZTZ5N7HqIk=",
+      "x86_64-linux": "sha256-y6hbGxi9iDfxNMdCHhkyR1+85rA9ZCBJBvo/BHz61u8=",
+      "aarch64-linux": "sha256-rOqppOyJVw4yd9dwWNVAPaoNmUSm6j5Qj8dWayYXwMI=",
       "x86_64-darwin": "sha256-zmxdNdptFJ+8sad6HICoJRNsVNdQ0j4kKKCPX9YsBE8=",
       "aarch64-darwin": "sha256-AbDHuUg8jLNPWur6hieDdY8Kc2+PmlXRJGD46yujam4="
     },
