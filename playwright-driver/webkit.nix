@@ -23,6 +23,7 @@
   icu70,
   lcms,
   libavif,
+  libbacktrace,
   libdrm,
   libepoxy,
   libevent,
@@ -155,8 +156,8 @@ let
       stripRoot = false;
       hash =
         {
-          x86_64-linux = "sha256-JdNYUUJPGRZ1Mdm2yTzFshsyntNlRqZCtyicLrrUk7g=";
-          aarch64-linux = "sha256-tQqaU1TuIfAohpMibWu9TVw9tVPZhXzYKZTZ5N7HqIk=";
+          x86_64-linux = "sha256-y6hbGxi9iDfxNMdCHhkyR1+85rA9ZCBJBvo/BHz61u8=";
+          aarch64-linux = "sha256-rOqppOyJVw4yd9dwWNVAPaoNmUSm6j5Qj8dWayYXwMI=";
         }
         .${system} or throwSystem;
     };
@@ -184,6 +185,7 @@ let
       icu70
       lcms
       libavif'
+      libbacktrace
       libdrm
       libepoxy
       libevent
