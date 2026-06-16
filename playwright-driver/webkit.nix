@@ -6,8 +6,6 @@
   makeWrapper,
   autoPatchelfHook,
   patchelfUnstable,
-  fetchpatch,
-  libjxl,
   brotli,
   at-spi2-atk,
   cairo,
@@ -34,7 +32,6 @@
   libpng,
   libsoup_3,
   libtasn1,
-  libvpx,
   enchant,
   libbacktrace,
   libwebp,
@@ -80,17 +77,6 @@ let
       "mac-14" + (lib.removePrefix "mac" suffix)
     else
       suffix;
-  libvpx' = libvpx.overrideAttrs (
-    finalAttrs: _: {
-      version = "1.12.0";
-      src = fetchFromGitHub {
-        owner = "webmproject";
-        repo = finalAttrs.pname;
-        rev = "v${finalAttrs.version}";
-        sha256 = "sha256-9SFFE2GfYYMgxp1dpmL3STTU2ea1R5vFKA1L0pZwIvQ=";
-      };
-    }
-  );
   libavif' = libavif.overrideAttrs (
     finalAttrs: _: {
       version = "0.9.3";
@@ -105,52 +91,6 @@ let
     }
   );
 
-  libjxl' = libjxl.overrideAttrs (
-    finalAttrs: _: {
-      version = "0.8.2";
-      src = fetchFromGitHub {
-        owner = "libjxl";
-        repo = "libjxl";
-        rev = "v${finalAttrs.version}";
-        hash = "sha256-I3PGgh0XqRkCFz7lUZ3Q4eU0+0GwaQcVb6t4Pru1kKo=";
-        fetchSubmodules = true;
-      };
-      patches = [
-        # Add missing <atomic> content to fix gcc compilation for RISCV architecture
-        # https://github.com/libjxl/libjxl/pull/2211
-        (fetchpatch {
-          url = "https://github.com/libjxl/libjxl/commit/22d12d74e7bc56b09cfb1973aa89ec8d714fa3fc.patch";
-          hash = "sha256-X4fbYTMS+kHfZRbeGzSdBW5jQKw8UN44FEyFRUtw0qo=";
-        })
-      ];
-      postPatch = ''
-        # Fix multiple definition errors by using C++17 instead of C++11
-        substituteInPlace CMakeLists.txt \
-          --replace "set(CMAKE_CXX_STANDARD 11)" "set(CMAKE_CXX_STANDARD 17)"
-        # Fix the build with CMake 4.
-        # See:
-        # * <https://github.com/webmproject/sjpeg/commit/9990bdceb22612a62f1492462ef7423f48154072>
-        # * <https://github.com/webmproject/sjpeg/commit/94e0df6d0f8b44228de5be0ff35efb9f946a13c9>
-        substituteInPlace third_party/sjpeg/CMakeLists.txt \
-          --replace-fail \
-            'cmake_minimum_required(VERSION 2.8.7)' \
-            'cmake_minimum_required(VERSION 3.5...3.10)'
-      '';
-      postInstall = "";
-
-      cmakeFlags = [
-        "-DJPEGXL_FORCE_SYSTEM_BROTLI=ON"
-        "-DJPEGXL_FORCE_SYSTEM_HWY=ON"
-        "-DJPEGXL_FORCE_SYSTEM_GTEST=ON"
-      ]
-      ++ lib.optionals stdenv.hostPlatform.isStatic [
-        "-DJPEGXL_STATIC=ON"
-      ]
-      ++ lib.optionals stdenv.hostPlatform.isAarch32 [
-        "-DJPEGXL_FORCE_NEON=ON"
-      ];
-    }
-  );
   webkit-linux = stdenv.mkDerivation {
     name = "playwright-webkit";
     src = fetchzip {
@@ -172,7 +112,6 @@ let
       freetype
       glib
       brotli
-      libjxl'
       gst_all_1.gst-plugins-bad
       gst_all_1.gst-plugins-base
       gst_all_1.gstreamer
@@ -197,7 +136,6 @@ let
       libwebp
       libwpe
       libwpe-fdo
-      libvpx'
       libbacktrace
       libxml2
       libxslt
@@ -216,8 +154,16 @@ let
 
       # remove unused gtk browser
       rm -rf $out/minibrowser-gtk
-      # remove bundled libs
-      rm -rf $out/minibrowser-wpe/sys
+      # remove most bundled libs but keep libjxl (not available from nixpkgs at compatible SONAME)
+      for f in "$out"/minibrowser-wpe/sys/lib/*.so*; do
+        base=$(basename "$f")
+        case "$base" in
+          libjxl*) : ;;
+          *) rm -f "$f" ;;
+        esac
+      done
+      rmdir "$out"/minibrowser-wpe/sys/lib 2>/dev/null || true
+      rmdir "$out"/minibrowser-wpe/sys 2>/dev/null || true
 
       # TODO: still fails on ubuntu trying to find libEGL_mesa.so.0
       wrapProgram $out/minibrowser-wpe/bin/MiniBrowser \
