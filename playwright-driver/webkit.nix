@@ -35,6 +35,7 @@
   libsoup_3,
   libtasn1,
   libvpx,
+  enchant,
   libbacktrace,
   libwebp,
   libwpe,
@@ -179,6 +180,7 @@ let
       harfbuzzFull
       hyphen
       icu70
+      enchant
       lcms
       libavif'
       libdrm
