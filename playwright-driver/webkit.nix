@@ -156,8 +156,8 @@ let
       stripRoot = false;
       hash =
         {
-          x86_64-linux = "sha256-y6hbGxi9iDfxNMdCHhkyR1+85rA9ZCBJBvo/BHz61u8=";
-          aarch64-linux = "sha256-rOqppOyJVw4yd9dwWNVAPaoNmUSm6j5Qj8dWayYXwMI=";
+          x86_64-linux = "sha256-QHCYfbUOcTsRm7ZKhVdRSUVmnx6Xjul3xkDSwR7XMX8=";
+          aarch64-linux = "sha256-vbMYXrpQX9r5Zcu6KnZwALhecjos53gzIy5bpiyoHWA=";
         }
         .${system} or throwSystem;
     };
