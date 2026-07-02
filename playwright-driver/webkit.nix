@@ -11,6 +11,7 @@
   brotli,
   at-spi2-atk,
   cairo,
+  enchant_2,
   flite,
   fontconfig,
   freetype,
@@ -170,6 +171,7 @@ let
     buildInputs = [
       at-spi2-atk
       cairo
+      enchant_2
       flite
       fontconfig.lib
       freetype
