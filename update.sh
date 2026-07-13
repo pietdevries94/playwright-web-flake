@@ -161,9 +161,9 @@ update_browser() {
             suffix="linux"
         elif [ "$name" = "firefox" ]; then
             stripRoot="true"
-            suffix="ubuntu-22.04"
+            suffix="ubuntu-24.04"
         else
-            suffix="ubuntu-22.04"
+            suffix="ubuntu-24.04"
         fi
     fi
     aarch64_suffix="$suffix-arm64"

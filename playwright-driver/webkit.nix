@@ -21,7 +21,7 @@
   harfbuzz,
   harfbuzzFull,
   hyphen,
-  icu70,
+  icu74,
   lcms,
   libavif,
   libbacktrace,
@@ -74,7 +74,7 @@ let
 
   suffix' =
     if lib.hasPrefix "linux" suffix then
-      "ubuntu-22.04" + (lib.removePrefix "linux" suffix)
+      "ubuntu-24.04" + (lib.removePrefix "linux" suffix)
     else if lib.hasPrefix "mac" suffix then
       "mac-14" + (lib.removePrefix "mac" suffix)
     else
@@ -88,19 +88,6 @@ let
         rev = "v${finalAttrs.version}";
         sha256 = "sha256-9SFFE2GfYYMgxp1dpmL3STTU2ea1R5vFKA1L0pZwIvQ=";
       };
-    }
-  );
-  libavif' = libavif.overrideAttrs (
-    finalAttrs: previousAttrs: {
-      version = "0.9.3";
-      src = fetchFromGitHub {
-        owner = "AOMediaCodec";
-        repo = finalAttrs.pname;
-        rev = "v${finalAttrs.version}";
-        hash = "sha256-ME/mkaHhFeHajTbc7zhg9vtf/8XgkgSRu9I/mlQXnds=";
-      };
-      postPatch = "";
-      patches = [ ];
     }
   );
 
@@ -157,8 +144,8 @@ let
       stripRoot = false;
       hash =
         {
-          x86_64-linux = "sha256-QHCYfbUOcTsRm7ZKhVdRSUVmnx6Xjul3xkDSwR7XMX8=";
-          aarch64-linux = "sha256-vbMYXrpQX9r5Zcu6KnZwALhecjos53gzIy5bpiyoHWA=";
+          x86_64-linux = "sha256-GASDnneoxfZLUctJLnaUTPW4HDbKdSamJBxFDVpPUC0=";
+          aarch64-linux = "sha256-qtqMCyEZVQu44HGI73t50D1WcnuzxuxLY7MDzf4NDeA=";
         }
         .${system} or throwSystem;
     };
@@ -184,9 +171,9 @@ let
       harfbuzz
       harfbuzzFull
       hyphen
-      icu70
+      icu74
       lcms
-      libavif'
+      libavif
       libbacktrace
       libdrm
       libepoxy
