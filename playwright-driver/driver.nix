@@ -103,6 +103,7 @@ let
 
     passthru = {
       browsersJSON = (lib.importJSON ./browsers.json).browsers;
+      selectBrowsers = browsers;
       browsers = browsers { };
       browsers-chromium = browsers {
         withFirefox = false;
