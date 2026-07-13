@@ -13,12 +13,12 @@ let
     name = "playwright-firefox";
     src = fetchzip {
       url = "https://cdn.playwright.dev/builds/firefox/${revision}/firefox-${
-        "ubuntu-22.04" + (lib.removePrefix "linux" suffix)
+        "ubuntu-24.04" + (lib.removePrefix "linux" suffix)
       }.zip";
       hash =
         {
-          x86_64-linux = "sha256-VFwdhneqr/TVgrupH27NcDXAYCBsdWtj9/qnmZAyd5E=";
-          aarch64-linux = "sha256-fcZ6hf4DY5D+54WfoJERiLdsrUjxLu3gnBVk3yhWpag=";
+          x86_64-linux = "sha256-ol9Ai8BpstZdfd6v1NDq66BjLTr/5THya0Fk2z1toJg=";
+          aarch64-linux = "sha256-G0pcHmjRj5GKsDF7iHdQyGsJCiv4gqaFv2PwGa/t8bw=";
         }
         .${system} or throwSystem;
     };
