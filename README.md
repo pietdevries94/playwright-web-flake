@@ -5,8 +5,40 @@ It does not contain playwright-python, because for my personal use I don't need 
 
 ## Usage
 
-> [!IMPORTANT]  
-> All versions up to 1.57.0 were published earlier with a now deprecated CDN url. These versions still work, but on 1 december 2025 all tags were retagged to use the new CDN url. If you used this flake before that date, please run `nix flake update` to get the updated version of whichever version of Playwright you were using.
+> [!IMPORTANT]
+> All versions up to 1.58.0 were previously published with a Playwright driver URL that is no longer available. On 14 July 2026, all affected tags with an exact matching PyPI wheel were retagged to fetch the driver from PyPI instead.
+> 
+> If you used this flake before that date, run `nix flake update` to get the repaired version of whichever Playwright release you were using.
+> 
+> <details>
+> <summary>Versions that could not be repaired</summary>
+> 
+> These Playwright versions do not have an exact matching PyPI wheel and therefore still use the unavailable upstream driver URL:
+> 
+> - `1.36.2`
+> - `1.37.1`
+> - `1.38.1`
+> - `1.40.1`
+> - `1.42.1`
+> - `1.43.1`
+> - `1.44.1`
+> - `1.45.2`
+> - `1.45.3`
+> - `1.46.1`
+> - `1.47.1`
+> - `1.47.2`
+> - `1.48.1`
+> - `1.48.2`
+> - `1.50.1`
+> - `1.51.1`
+> - `1.53.1`
+> - `1.53.2`
+> - `1.54.1`
+> - `1.54.2`
+> - `1.55.1`
+> - `1.56.1`
+> - `1.58.1`
+> </details>
 
 See the [`nix shell`](#with-nix-shell) example if all you need is access to the `playwright` binary in the current shell.
 
