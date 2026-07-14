@@ -11,6 +11,7 @@
 , makeWrapper
 , runCommand
 , unzip
+, cacert
 }:
 let
   inherit (stdenv.hostPlatform) system;
@@ -19,13 +20,31 @@ let
 
   driver = stdenv.mkDerivation (finalAttrs:
     let
-      suffix = {
-        x86_64-linux = "linux";
-        aarch64-linux = "linux-arm64";
-        x86_64-darwin = "mac";
-        aarch64-darwin = "mac-arm64";
+      wheel = {
+        x86_64-linux = {
+          filename = "playwright-1.37.0-py3-none-manylinux1_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/a6/43/a7ff635b8be554345fa712b15e1ff60c073bb78474c797bd93c4a99aec5e/playwright-1.37.0-py3-none-manylinux1_x86_64.whl";
+          hash = "sha256-QfAoBHKvlMQm6UH2qWn/an6hVtwV/QHQmsS48JLiNG4=";
+        };
+
+        aarch64-linux = {
+          filename = "playwright-1.37.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          url = "https://files.pythonhosted.org/packages/0b/03/f60aee90368a5bdc29140d84d74789bc34aa379fd93b57e4906be9cbf2d4/playwright-1.37.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          hash = "sha256-tXSInvl7f0SmM6oQ1yuJZqhQpDVNkV/QvH6GWOgl3WM=";
+        };
+
+        x86_64-darwin = {
+          filename = "playwright-1.37.0-py3-none-macosx_10_13_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/9b/67/d6e048a7c10e4cd9cb8f8c8953bad13db2b77d35c7908d792cec9a7fe863/playwright-1.37.0-py3-none-macosx_10_13_x86_64.whl";
+          hash = "sha256-tHb2MlGHbxYl9JCvjVjsDbkLVVxiO39UEF+R0zh4wG0=";
+        };
+
+        aarch64-darwin = {
+          filename = "playwright-1.37.0-py3-none-macosx_11_0_arm64.whl";
+          url = "https://files.pythonhosted.org/packages/4e/58/d89d3f5e2fba86c69c512aa4b12dd4099400480a494602ea73805a02578b/playwright-1.37.0-py3-none-macosx_11_0_arm64.whl";
+          hash = "sha256-aNVu/lzpFrqzSRd+kHJoN6bwyud+vWpSAPUzO3h7Jfs=";
+        };
       }.${system} or throwSystem;
-      filename = "playwright-${finalAttrs.version}-${suffix}.zip";
     in
     {
       pname = "playwright-driver";
@@ -33,43 +52,50 @@ let
       version = "1.37.0";
 
       src = fetchurl {
-        url = "https://playwright.azureedge.net/builds/driver/${filename}";
-        sha256 = {
-          x86_64-linux = "1lkmanr402ar9njwb7dgyzparjyr1r9krz9ad7b8c6hi3fjvrj0y";
-          aarch64-linux = "13nfva9jfmjyjxm1my0aq8ngn6ha0fdrpfv28gm351n0j9cjlvqh";
-          x86_64-darwin = "0q1qmgypngxs9ipb6dlhk1xccyzw6frzr835ijifpypgp4xmz2gi";
-          aarch64-darwin = "1mq1868s06wgfgi3nhdrzsdqi3cl08lrkiz5q06mg1s724b2sf0v";
-        }.${system} or throwSystem;
+        inherit (wheel) url hash;
       };
 
-      sourceRoot = ".";
+      unpackPhase = ''
+        runHook preUnpack
+        unzip "$src"
+        runHook postUnpack
+      '';
+
+      sourceRoot = "playwright/driver";
 
       nativeBuildInputs = [ unzip ];
 
       postPatch = ''
         # Use Nix's NodeJS instead of the bundled one.
-        substituteInPlace playwright.sh --replace '"$SCRIPT_PATH/node"' '"${nodejs}/bin/node"'
         rm node
 
-        # Hard-code the script path to $out directory to avoid a dependency on coreutils
-        substituteInPlace playwright.sh \
-          --replace 'SCRIPT_PATH="$(cd "$(dirname "$0")" ; pwd -P)"' "SCRIPT_PATH=$out"
-
-        patchShebangs playwright.sh package/bin/*.sh
+        patchShebangs package/bin/*.sh
       '';
 
       installPhase = ''
         runHook preInstall
 
         mkdir -p $out/bin
-        mv playwright.sh $out/bin/playwright
+        # playwright.sh doesn't exist anymore, so we write a new one
+        cat > $out/bin/playwright <<EOF
+#!/bin/sh
+if [ -z "\$PLAYWRIGHT_NODEJS_PATH" ]; then
+  PLAYWRIGHT_NODEJS_PATH="${nodejs}/bin/node"
+fi
+"\$PLAYWRIGHT_NODEJS_PATH" "$out/package/cli.js" "\$@"
+EOF
+
+        chmod +x $out/bin/playwright
+
+        patchShebangs $out/bin/playwright
+
         mv package $out/
 
         runHook postInstall
       '';
 
       passthru = {
-        inherit filename;
+        inherit (wheel) filename;
         browsers = {
           x86_64-linux = browsers-linux { };
           aarch64-linux = browsers-linux { };
@@ -85,6 +111,10 @@ let
     inherit (driver) version;
 
     dontUnpack = true;
+
+    nativeBuildInputs = [
+      cacert
+    ];
 
     installPhase = ''
       runHook preInstall
@@ -123,6 +153,16 @@ let
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
         makeWrapper ${chromium}/bin/chromium $out/chromium-$CHROMIUM_REVISION/chrome-linux/chrome \
+          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
+          --set FONTCONFIG_FILE ${fontconfig}
+
+        # We also need to install the headless shell version of Chromium
+        CHROMIUM_HEADLESS_SHELL_REVISION=$(jq -r '.browsers[] | select(.name == "chromium-headless-shell").revision' $BROWSERS_JSON)
+        mkdir -p $out/chromium-headless-shell-$CHROMIUM_HEADLESS_SHELL_REVISION/chrome-linux
+
+        # See here for the Chrome options:
+        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/headless_shell \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''

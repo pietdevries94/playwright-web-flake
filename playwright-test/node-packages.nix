@@ -4,13 +4,13 @@
 
 let
   sources = {
-    "@types/node-20.4.9" = {
+    "@types/node-26.1.1" = {
       name = "_at_types_slash_node";
       packageName = "@types/node";
-      version = "20.4.9";
+      version = "26.1.1";
       src = fetchurl {
-        url = "https://registry.npmjs.org/@types/node/-/node-20.4.9.tgz";
-        sha512 = "8e2HYcg7ohnTUbHk8focoklEQYvemQmu9M/f43DZVx43kHn0tE3BY/6gSDxS7k0SprtS0NHvj+L80cGLnoOUcQ==";
+        url = "https://registry.npmjs.org/@types/node/-/node-26.1.1.tgz";
+        sha512 = "nxAkRSVkN1Y0JC1W8ky/fTfkGsMmcrRsbx+3XoZE+rMOX71kLYTV7fLXpqud1GpbpP5TuffXFqfX7fH2GgZREw==";
       };
     };
     "fsevents-2.3.2" = {
@@ -31,6 +31,15 @@ let
         sha512 = "1c46jhTH/myQw6sesrcuHVtLoSNfJv8Pfy9t3rs6subY7kARv0HRw5PpyfPYPpPtQvBOmgbE6K+qgYUpj81LAA==";
       };
     };
+    "undici-types-8.3.0" = {
+      name = "undici-types";
+      packageName = "undici-types";
+      version = "8.3.0";
+      src = fetchurl {
+        url = "https://registry.npmjs.org/undici-types/-/undici-types-8.3.0.tgz";
+        sha512 = "j375ScV60dom+YkPFIfTLcOiPxkN/buHz5GobjLhixFuANaNs3C9l4GmrWqejgXWJ7BbJcFYpTEUkS1Ge8bpZQ==";
+      };
+    };
   };
 in
 {
@@ -43,9 +52,10 @@ in
       sha512 = "181WBLk4SRUyH1Q96VZl7BP6HcK0b7lbdeKisn3N/vnjitk+9HbdlFz/L5fey05vxaAhldIDnzo8KUoy8S3mmQ==";
     };
     dependencies = [
-      sources."@types/node-20.4.9"
+      sources."@types/node-26.1.1"
       sources."fsevents-2.3.2"
       sources."playwright-core-1.37.0"
+      sources."undici-types-8.3.0"
     ];
     buildInputs = globalBuildInputs;
     meta = {
