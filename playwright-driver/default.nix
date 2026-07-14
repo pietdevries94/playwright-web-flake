@@ -11,6 +11,7 @@
 , makeWrapper
 , runCommand
 , unzip
+, cacert
 }:
 let
   inherit (stdenv.hostPlatform) system;
@@ -19,13 +20,31 @@ let
 
   driver = stdenv.mkDerivation (finalAttrs:
     let
-      suffix = {
-        x86_64-linux = "linux";
-        aarch64-linux = "linux-arm64";
-        x86_64-darwin = "mac";
-        aarch64-darwin = "mac-arm64";
+      wheel = {
+        x86_64-linux = {
+          filename = "playwright-1.45.0-py3-none-manylinux1_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/a4/3e/d68323360efc63c9565f8f9bc84d1074bb2d4726ec5bb45bd8c9fb72fe1b/playwright-1.45.0-py3-none-manylinux1_x86_64.whl";
+          hash = "sha256-C6WjnyX7m5zxvUhnj0RTain22DN2Mp3i3uFWfawiCv4=";
+        };
+
+        aarch64-linux = {
+          filename = "playwright-1.45.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          url = "https://files.pythonhosted.org/packages/3a/b8/329494128bc9c90ad4a705e11e33bc1d90e79faf90ee27673c568ad0c8ba/playwright-1.45.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          hash = "sha256-sJ+nZhS6KSbUWkwFgfcQwTZS1eMikLpqFJD7r/9/C+g=";
+        };
+
+        x86_64-darwin = {
+          filename = "playwright-1.45.0-py3-none-macosx_10_13_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/99/ee/5ffdf7557b601a00fb4e0cc29b140cefc584e8d394ea21cc3a4eb05b4d45/playwright-1.45.0-py3-none-macosx_10_13_x86_64.whl";
+          hash = "sha256-fUmu5ZB9jnIGDwS8KZy2hRwtxEyyJ1QK3onXqlKekHo=";
+        };
+
+        aarch64-darwin = {
+          filename = "playwright-1.45.0-py3-none-macosx_11_0_arm64.whl";
+          url = "https://files.pythonhosted.org/packages/f4/4e/d7df2eb27e2f228ec5fb2be453d3c780001ab9b3bd0f7ec5b6568adfe46e/playwright-1.45.0-py3-none-macosx_11_0_arm64.whl";
+          hash = "sha256-IQyfhIgg9YtbXtSAR3SGILeAyjrMPit1YNr7K/3W2Qo=";
+        };
       }.${system} or throwSystem;
-      filename = "playwright-${finalAttrs.version}-${suffix}.zip";
     in
     {
       pname = "playwright-driver";
@@ -33,16 +52,16 @@ let
       version = "1.45.0";
 
       src = fetchurl {
-        url = "https://cdn.playwright.dev/builds/driver/${filename}";
-        sha256 = {
-          x86_64-linux = "086xi6xdklniqq84s6ww598j27rb0hfxpapxgixssws76g4ah6s6";
-          aarch64-linux = "1r00nfis3avfd4xf010mh52bybly82wwh8wfw9gy78kv9lbpb2fs";
-          x86_64-darwin = "1dzi25pbxkwh1afwa73xynhd2g2vib1v7k39mzbhha18cg87mxpc";
-          aarch64-darwin = "1rpp9ykvms1gd3frc86d70jx9dyh1pwmi2fc04zis0bgfv954iid";
-        }.${system} or throwSystem;
+        inherit (wheel) url hash;
       };
 
-      sourceRoot = ".";
+      unpackPhase = ''
+        runHook preUnpack
+        unzip "$src"
+        runHook postUnpack
+      '';
+
+      sourceRoot = "playwright/driver";
 
       nativeBuildInputs = [ unzip ];
 
@@ -76,7 +95,7 @@ EOF
       '';
 
       passthru = {
-        inherit filename;
+        inherit (wheel) filename;
         browsers = {
           x86_64-linux = browsers-linux { };
           aarch64-linux = browsers-linux { };
@@ -92,6 +111,10 @@ EOF
     inherit (driver) version;
 
     dontUnpack = true;
+
+    nativeBuildInputs = [
+      cacert
+    ];
 
     installPhase = ''
       runHook preInstall
@@ -130,6 +153,16 @@ EOF
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
         makeWrapper ${chromium}/bin/chromium $out/chromium-$CHROMIUM_REVISION/chrome-linux/chrome \
+          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
+          --set FONTCONFIG_FILE ${fontconfig}
+
+        # We also need to install the headless shell version of Chromium
+        CHROMIUM_HEADLESS_SHELL_REVISION=$(jq -r '.browsers[] | select(.name == "chromium-headless-shell").revision' $BROWSERS_JSON)
+        mkdir -p $out/chromium-headless-shell-$CHROMIUM_HEADLESS_SHELL_REVISION/chrome-linux
+
+        # See here for the Chrome options:
+        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/headless_shell \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''
