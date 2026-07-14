@@ -20,13 +20,31 @@ let
 
   driver = stdenv.mkDerivation (finalAttrs:
     let
-      suffix = {
-        x86_64-linux = "linux";
-        aarch64-linux = "linux-arm64";
-        x86_64-darwin = "mac";
-        aarch64-darwin = "mac-arm64";
+      wheel = {
+        x86_64-linux = {
+          filename = "playwright-1.58.0-py3-none-manylinux1_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/f1/af/009958cbf23fac551a940d34e3206e6c7eed2b8c940d0c3afd1feb0b0589/playwright-1.58.0-py3-none-manylinux1_x86_64.whl";
+          hash = "sha256-yVVouh7ag4ElmMHcm+YLRAbf/WCxSbwVNhgK0QhyPWs=";
+        };
+
+        aarch64-linux = {
+          filename = "playwright-1.58.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          url = "https://files.pythonhosted.org/packages/d9/a6/0e66ad04b6d3440dae73efb39540c5685c5fc95b17c8b29340b62abbd952/playwright-1.58.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          hash = "sha256-j5mZlI8atUHZiBLeJeOoxBB3aqUW2UiAcUCv95e0v/o=";
+        };
+
+        x86_64-darwin = {
+          filename = "playwright-1.58.0-py3-none-macosx_10_13_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/f8/c9/9c6061d5703267f1baae6a4647bfd1862e386fbfdb97d889f6f6ae9e3f64/playwright-1.58.0-py3-none-macosx_10_13_x86_64.whl";
+          hash = "sha256-luMgSqwpLuY57b/e9imLS+LqClWha3Bo35GtrAd8xgY=";
+        };
+
+        aarch64-darwin = {
+          filename = "playwright-1.58.0-py3-none-macosx_11_0_arm64.whl";
+          url = "https://files.pythonhosted.org/packages/e0/40/59d34a756e02f8c670f0fee987d46f7ee53d05447d43cd114ca015cb168c/playwright-1.58.0-py3-none-macosx_11_0_arm64.whl";
+          hash = "sha256-cMdjaUc50o33HtV4ucggK7g+j+j7kmjATdE6/jYwH3E=";
+        };
       }.${system} or throwSystem;
-      filename = "playwright-${finalAttrs.version}-${suffix}.zip";
     in
     {
       pname = "playwright-driver";
@@ -34,16 +52,16 @@ let
       version = "1.58.0";
 
       src = fetchurl {
-        url = "https://cdn.playwright.dev/builds/driver/${filename}";
-        sha256 = {
-          x86_64-linux = "0293pyn0728y500agvh8173nvkv227n7909y6n0nm2091la7xzbw";
-          aarch64-linux = "10m3afhyvwh7frdhsz8q07713aw9l7z9kpyii238glc92nz1l40l";
-          x86_64-darwin = "160frfr7xg711ryrwja7q5wlhqx2g4asyb18va14s6jam0z68zda";
-          aarch64-darwin = "1b4nqc2brpq35p54qaxbld98rb2ylim15abvcqcpw1416hshfm4l";
-        }.${system} or throwSystem;
+        inherit (wheel) url hash;
       };
 
-      sourceRoot = ".";
+      unpackPhase = ''
+        runHook preUnpack
+        unzip "$src"
+        runHook postUnpack
+      '';
+
+      sourceRoot = "playwright/driver";
 
       nativeBuildInputs = [ unzip ];
 
@@ -76,15 +94,15 @@ EOF
         runHook postInstall
       '';
 
-      passthru = rec {
-        inherit filename;
+      passthru = {
+        inherit (wheel) filename;
         browsers = {
-          x86_64-linux = browsers-linux-x64 { };
-          aarch64-linux = browsers-linux-arm64 { };
+          x86_64-linux = browsers-linux { };
+          aarch64-linux = browsers-linux { };
           x86_64-darwin = browsers-mac;
           aarch64-darwin = browsers-mac;
         }.${system} or throwSystem;
-        browsers-chromium = browsers;
+        browsers-chromium = browsers-linux { };
       };
     });
 
@@ -111,49 +129,7 @@ EOF
     meta.platforms = lib.platforms.darwin;
   };
 
-  browsers-linux-x64 = { withChromium ? true }:
-    let
-      fontconfig = makeFontsConf {
-        fontDirectories = [ ];
-      };
-    in
-    runCommand
-      ("playwright-browsers"
-        + lib.optionalString withChromium "-chromium")
-      {
-        nativeBuildInputs = [
-          makeWrapper
-          jq
-        ];
-      }
-      (''
-        BROWSERS_JSON=${driver}/package/browsers.json
-      '' + lib.optionalString withChromium ''
-        CHROMIUM_REVISION=$(jq -r '.browsers[] | select(.name == "chromium").revision' $BROWSERS_JSON)
-        mkdir -p $out/chromium-$CHROMIUM_REVISION/chrome-linux64
-
-        # See here for the Chrome options:
-        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium-$CHROMIUM_REVISION/chrome-linux64/chrome \
-          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
-          --set FONTCONFIG_FILE ${fontconfig}
-
-        # We also need to install the headless shell version of Chromium
-        CHROMIUM_HEADLESS_SHELL_REVISION=$(jq -r '.browsers[] | select(.name == "chromium-headless-shell").revision' $BROWSERS_JSON)
-        mkdir -p $out/chromium-headless-shell-$CHROMIUM_HEADLESS_SHELL_REVISION/chrome-linux64
-
-        # See here for the Chrome options:
-        # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-headless-shell-linux64/chrome-headless-shell \
-          --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
-          --set FONTCONFIG_FILE ${fontconfig}
-      '' + ''
-        FFMPEG_REVISION=$(jq -r '.browsers[] | select(.name == "ffmpeg").revision' $BROWSERS_JSON)
-        mkdir -p $out/ffmpeg-$FFMPEG_REVISION
-        ln -s ${ffmpeg}/bin/ffmpeg $out/ffmpeg-$FFMPEG_REVISION/ffmpeg-linux
-      '');
-
-  browsers-linux-arm64 = { withChromium ? true }:
+  browsers-linux = { withChromium ? true }:
     let
       fontconfig = makeFontsConf {
         fontDirectories = [ ];
@@ -186,7 +162,7 @@ EOF
 
         # See here for the Chrome options:
         # https://github.com/NixOS/nixpkgs/issues/136207#issuecomment-908637738
-        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/chrome \
+        makeWrapper ${chromium}/bin/chromium $out/chromium_headless_shell-$CHROMIUM_REVISION/chrome-linux/headless_shell \
           --set SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
           --set FONTCONFIG_FILE ${fontconfig}
       '' + ''
