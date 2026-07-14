@@ -20,13 +20,31 @@ let
 
   driver = stdenv.mkDerivation (finalAttrs:
     let
-      suffix = {
-        x86_64-linux = "linux";
-        aarch64-linux = "linux-arm64";
-        x86_64-darwin = "mac";
-        aarch64-darwin = "mac-arm64";
+      wheel = {
+        x86_64-linux = {
+          filename = "playwright-1.54.0-py3-none-manylinux1_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/34/a9/45084fd23b6206f954198296ce39b0acf50debfdf3ec83a593e4d73c9c8a/playwright-1.54.0-py3-none-manylinux1_x86_64.whl";
+          hash = "sha256-CZGfRcx0xkr7VDJkbX/vDRn/9QmQyGLLjZsFdwk/QMw=";
+        };
+
+        aarch64-linux = {
+          filename = "playwright-1.54.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          url = "https://files.pythonhosted.org/packages/02/d4/6a692f4c6db223adc50a6e53af405b45308db39270957a6afebddaa80ea2/playwright-1.54.0-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl";
+          hash = "sha256-E64gbFVzfo4+rlH7OF1hwDEu7vMVNWQ7tiMnQbQbb9w=";
+        };
+
+        x86_64-darwin = {
+          filename = "playwright-1.54.0-py3-none-macosx_10_13_x86_64.whl";
+          url = "https://files.pythonhosted.org/packages/f3/09/33d5bfe393a582d8dac72165a9e88b274143c9df411b65ece1cc13f42988/playwright-1.54.0-py3-none-macosx_10_13_x86_64.whl";
+          hash = "sha256-vzuEWvdENw8b0ihsKpU29HTMiojcmVty6ppb5xTJp30=";
+        };
+
+        aarch64-darwin = {
+          filename = "playwright-1.54.0-py3-none-macosx_11_0_arm64.whl";
+          url = "https://files.pythonhosted.org/packages/e1/7b/51882dc584f7aa59f446f2bb34e33c0e5f015de4e31949e5b7c2c10e54f0/playwright-1.54.0-py3-none-macosx_11_0_arm64.whl";
+          hash = "sha256-eAkos8ogd66pBBSzflTt0MS7tX0ar8QveqCz/SwvrAI=";
+        };
       }.${system} or throwSystem;
-      filename = "playwright-${finalAttrs.version}-${suffix}.zip";
     in
     {
       pname = "playwright-driver";
@@ -34,16 +52,16 @@ let
       version = "1.54.0";
 
       src = fetchurl {
-        url = "https://cdn.playwright.dev/builds/driver/${filename}";
-        sha256 = {
-          x86_64-linux = "18sn65q854jywsnqyqizl719mvzlazq619bir856gw18i8sch4jq";
-          aarch64-linux = "1mxg8yi8qqwq3fl9d0qc6w5388bsdy7yq0m4v1hnfldfh4xa9vxs";
-          x86_64-darwin = "1i8pgmhshvwwsd7iib3wwfifsz532z66qg5gvckx124m3gb6fz6i";
-          aarch64-darwin = "1hc1wq89i67idcvqa0bsffqdbqkn0m6fpsg26fz1h3ax5vagdxis";
-        }.${system} or throwSystem;
+        inherit (wheel) url hash;
       };
 
-      sourceRoot = ".";
+      unpackPhase = ''
+        runHook preUnpack
+        unzip "$src"
+        runHook postUnpack
+      '';
+
+      sourceRoot = "playwright/driver";
 
       nativeBuildInputs = [ unzip ];
 
@@ -77,7 +95,7 @@ EOF
       '';
 
       passthru = {
-        inherit filename;
+        inherit (wheel) filename;
         browsers = {
           x86_64-linux = browsers-linux { };
           aarch64-linux = browsers-linux { };
