@@ -6,7 +6,7 @@ It does not contain playwright-python, because for my personal use I don't need 
 ## Usage
 
 > [!IMPORTANT]
-> All versions up to 1.58.0 were previously published with a Playwright driver URL that is no longer available. On 14 July 2026, all affected tags with an exact matching PyPI wheel were retagged to fetch the driver from PyPI instead.
+> All versions up to and including 1.58.1 were previously published with a Playwright driver URL that is no longer available. On 14 July 2026, all affected tags with an exact matching PyPI wheel were retagged to fetch the driver from PyPI instead.
 > 
 > If you used this flake before that date, run `nix flake update` to get the repaired version of whichever Playwright release you were using.
 > 
@@ -38,6 +38,8 @@ It does not contain playwright-python, because for my personal use I don't need 
 > - `1.55.1`
 > - `1.56.1`
 > - `1.58.1`
+>
+> If you need any of these, make an issue.
 > </details>
 
 See the [`nix shell`](#with-nix-shell) example if all you need is access to the `playwright` binary in the current shell.
