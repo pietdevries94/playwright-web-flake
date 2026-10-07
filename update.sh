@@ -101,20 +101,22 @@ browser_download_url() {
     local artifact
     local cft_platform
 
-    # Chromium and chromium-headless-shell use Chrome for Testing artifacts on
-    # Linux/macOS on x86_64 and aarch64-darwin.
+    # Chromium and chromium-headless-shell use Chrome for Testing artifacts.
     if [ "$name" = "chromium" ] || [ "$name" = "chromium-headless-shell" ]; then
         if [ "$name" = "chromium" ]; then
             artifact="chrome"
         else
             artifact="chrome-headless-shell"
         fi
-
-        if [ "$platform" = "linux" ] && [ "$arch" = "x86_64" ]; then
-            echo "https://cdn.playwright.dev/chrome-for-testing-public/${browser_version}/linux64/${artifact}-linux64.zip"
+        if [ "$platform" = "linux" ]; then
+            if [ "$arch" = "x86_64" ]; then
+                cft_platform="linux64"
+            else
+                cft_platform="linux-arm64"
+            fi
+            echo "https://cdn.playwright.dev/chrome-for-testing-public/${browser_version}/${cft_platform}/${artifact}-${cft_platform}.zip"
             return
         fi
-
         if [ "$platform" = "darwin" ]; then
             if [ "$arch" = "x86_64" ]; then
                 cft_platform="mac-x64"

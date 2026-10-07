@@ -42,19 +42,25 @@
   ...
 }:
 let
+  chromeDir =
+    {
+      x86_64-linux = "chrome-linux64";
+      aarch64-linux = "chrome-linux-arm64";
+    }
+    .${system} or throwSystem;
   chromium-linux = stdenv.mkDerivation {
     name = "playwright-chromium";
     src = fetchzip {
       url =
         {
           x86_64-linux = "https://cdn.playwright.dev/builds/cft/${browserVersion}/linux64/chrome-linux64.zip";
-          aarch64-linux = "https://cdn.playwright.dev/builds/chromium/${revision}/chromium-${suffix}.zip";
+          aarch64-linux = "https://cdn.playwright.dev/builds/cft/${browserVersion}/linux-arm64/chrome-linux-arm64.zip";
         }
         .${system} or throwSystem;
       hash =
         {
           x86_64-linux = "sha256-ORdMu1e4Peolr8rdfvzgeaFhC8RgBipaOsAm7e3ZeqE=";
-          aarch64-linux = "sha256-2JRLR1h189ApHRu77O6YmigQpqO2rXu3InM/qrzwX/c=";
+          aarch64-linux = "sha256-AWXksACJGsDisnp9dAUcukDf/ruMCRCX9kZNNnE0R8Q=";
         }
         .${system} or throwSystem;
     };
@@ -94,10 +100,10 @@ let
     installPhase = ''
       runHook preInstall
 
-      mkdir -p $out/chrome-linux64
-      cp -R . $out/chrome-linux64
+      mkdir -p $out/${chromeDir}
+      cp -R . $out/${chromeDir}
 
-      wrapProgram $out/chrome-linux64/chrome \
+      wrapProgram $out/${chromeDir}/chrome \
         --set-default SSL_CERT_FILE /etc/ssl/certs/ca-bundle.crt \
         --set-default FONTCONFIG_FILE ${fontconfig_file}
 
