@@ -118,8 +118,8 @@ let
 
     postFixup = ''
       # replace bundled vulkan-loader since we are also already adding our own to RPATH
-      rm "$out/chrome-linux64/libvulkan.so.1"
-      ln -s -t "$out/chrome-linux64" "${lib.getLib vulkan-loader}/lib/libvulkan.so.1"
+      rm "$out/${chromeDir}/libvulkan.so.1"
+      ln -s -t "$out/${chromeDir}" "${lib.getLib vulkan-loader}/lib/libvulkan.so.1"
     '';
   };
   chromium-darwin = fetchzip {
