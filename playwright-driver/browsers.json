@@ -2,13 +2,13 @@
   "comment": "This file is kept up to date via update.sh",
   "browsers": {
     "chromium": {
-      "revision": "1254",
-      "browserVersion": "158.0.8127.18",
+      "revision": "1255",
+      "browserVersion": "159.0.8154.6",
       "title": "Chrome for Testing"
     },
     "chromium-headless-shell": {
-      "revision": "1254",
-      "browserVersion": "158.0.8127.18",
+      "revision": "1255",
+      "browserVersion": "159.0.8154.6",
       "title": "Chrome Headless Shell"
     },
     "firefox": {

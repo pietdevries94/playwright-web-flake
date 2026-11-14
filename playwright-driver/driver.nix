@@ -27,13 +27,13 @@ let
     }
     .${system} or throwSystem;
 
-  version = "1.65.0";
+  version = "1.65.1";
 
   src = fetchFromGitHub {
     owner = "Microsoft";
     repo = "playwright";
     rev = "v${version}";
-    hash = "sha256-wE+ZAzphSpmvjseKP9zUJYJl97gyEXfz6ufImH44b2U=";
+    hash = "sha256-nHgv+Fxw8JRv4MrUp9JLRMnSz8EeXb2yNOXjhUvP8ik=";
   };
 
   playwright = buildNpmPackage {
@@ -41,7 +41,7 @@ let
     inherit version src;
 
     sourceRoot = "${src.name}"; # update.sh depends on sourceRoot presence
-    npmDepsHash = "sha256-jm/uT58P99UQnmlRhDnEcj3Y3qwvxBEAOnabj0pFyKs=";
+    npmDepsHash = "sha256-WFSmxRCEv1IQwLIzKh7GQ9LApNnh1kwifuTuDHAWXfM=";
 
     nativeBuildInputs = [
       cacert
